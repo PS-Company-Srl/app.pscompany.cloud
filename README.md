@@ -1,162 +1,59 @@
-# PS Company Chatbot Platform
+<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-Piattaforma multi-tenant per chatbot AI con integrazione web e WhatsApp.
+<p align="center">
+<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+</p>
 
-## 🏗️ Architettura
+## About Laravel
 
-```
-┌─────────────────────────────────────────────────────────────────┐
-│                    app.pscompany.cloud (Admin)                  │
-│                 Gestione globale tutti i bot                    │
-└─────────────────────────────────────────────────────────────────┘
-                              │
-        ┌─────────────────────┼─────────────────────┐
-        ▼                     ▼                     ▼
-┌───────────────┐     ┌───────────────┐     ┌───────────────┐
-│  cliente1.    │     │  cliente2.    │     │  cliente3.    │
-│  pscompany.   │     │  pscompany.   │     │  pscompany.   │
-│  cloud        │     │  cloud        │     │  cloud        │
-└───────────────┘     └───────────────┘     └───────────────┘
-```
+Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
 
-## 📁 Struttura Progetto
+- [Simple, fast routing engine](https://laravel.com/docs/routing).
+- [Powerful dependency injection container](https://laravel.com/docs/container).
+- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
+- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
+- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
+- [Robust background job processing](https://laravel.com/docs/queues).
+- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
 
-```
-chatbot-project/
-├── backend/              # Laravel 11 + Inertia/React
-├── widget/               # React Widget embeddabile (standalone)
-├── n8n-workflows/        # Workflow da importare su n8n VPS
-└── docs/                 # Documentazione
-```
+Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
-## 🚀 Setup Locale (Herd + DBngin)
+## Learning Laravel
 
-### Prerequisiti
+Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
 
-- [Herd](https://herd.laravel.com/) installato
-- [DBngin](https://dbngin.com/) installato
-- Node.js 18+
-- Composer
+If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
 
-### 1. Database
+## Laravel Sponsors
 
-1. Apri **DBngin**
-2. Crea un nuovo server MySQL 8
-3. Crea un database: `pscompany_chatbot`
+We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
 
-### 2. Backend Laravel
+### Premium Partners
 
-```bash
-cd backend
+- **[Vehikl](https://vehikl.com)**
+- **[Tighten Co.](https://tighten.co)**
+- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
+- **[64 Robots](https://64robots.com)**
+- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
+- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
+- **[Redberry](https://redberry.international/laravel-development)**
+- **[Active Logic](https://activelogic.com)**
 
-# Installa dipendenze
-composer install
+## Contributing
 
-# Configura environment
-cp .env.example .env
-php artisan key:generate
+Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
 
-# Modifica .env con i tuoi dati DBngin
-# DB_HOST=127.0.0.1
-# DB_PORT=3306 (o la porta di DBngin)
-# DB_DATABASE=pscompany_chatbot
-# DB_USERNAME=root
-# DB_PASSWORD=
+## Code of Conduct
 
-# Esegui migrations
-php artisan migrate --seed
+In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
 
-# Link con Herd
-herd link chatbot
+## Security Vulnerabilities
 
-# Ora accessibile su http://chatbot.test
-```
+If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
 
-### 3. Widget (sviluppo)
+## License
 
-```bash
-cd widget
-
-npm install
-npm run dev
-
-# Widget disponibile su http://localhost:3001
-```
-
-### 4. n8n Workflows
-
-1. Accedi alla tua istanza n8n sulla VPS
-2. Importa i file JSON da `/n8n-workflows/`
-3. Configura le credenziali (OpenAI, Internal API)
-
-## 🔧 Configurazione
-
-### Environment Variables (.env)
-
-```env
-# App
-APP_URL=http://chatbot.test
-
-# Database (DBngin)
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=pscompany_chatbot
-DB_USERNAME=root
-DB_PASSWORD=
-
-# OpenAI
-OPENAI_API_KEY=sk-...
-
-# n8n (tua istanza VPS)
-N8N_WEBHOOK_URL=https://n8n.pscompany.cloud
-N8N_INTERNAL_KEY=your_secret_key
-
-# Domini produzione
-ADMIN_DOMAIN=app.pscompany.cloud
-API_DOMAIN=api.pscompany.cloud
-CDN_DOMAIN=cdn.pscompany.cloud
-```
-
-## 📊 Stack Tecnologico
-
-| Componente | Tecnologia |
-|------------|------------|
-| Backend | Laravel 11 + Inertia.js |
-| Frontend Admin | React 18 + TypeScript + Tailwind |
-| Database | MySQL 8 (DBngin) |
-| Cache | File/Redis (Herd) |
-| AI Orchestration | n8n (VPS) |
-| LLM | OpenAI GPT-4o |
-| Widget | React standalone |
-
-## 🌐 Domini (Produzione)
-
-| Dominio | Uso |
-|---------|-----|
-| `app.pscompany.cloud` | Pannello Admin PS Company |
-| `*.pscompany.cloud` | Pannelli Cliente (sottodomini) |
-| `api.pscompany.cloud` | API pubblica |
-| `cdn.pscompany.cloud` | Widget JS |
-| `n8n.pscompany.cloud` | n8n (già esistente) |
-
-## 📈 Roadmap
-
-### MVP (v1.0)
-- [x] Schema database multi-tenant
-- [x] Widget React embeddabile
-- [x] Workflow n8n chatbot
-- [x] Integrazione WhatsApp
-- [ ] Pannello Admin PS Company
-- [ ] Pannello Cliente
-- [ ] RAG con knowledge base
-- [ ] Lead capture automatico
-
-### v1.1
-- [ ] Customizzazione estetica widget
-- [ ] Web scraping per knowledge base
-- [ ] Analytics avanzate
-
-## 📝 License
-
-Proprietario - PS Company
+The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
