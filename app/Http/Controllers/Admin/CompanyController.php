@@ -7,7 +7,6 @@ use App\Jobs\FetchCompanyWebsiteContent;
 use App\Models\Company;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response as InertiaResponse;
 
@@ -39,11 +38,14 @@ class CompanyController extends Controller
             'website' => 'nullable|string|max:500|url',
             'phone' => 'nullable|string|max:50',
             'address' => 'nullable|string',
-            'widget_primary_color' => 'nullable|string|max:20|regex:/^#[0-9A-Fa-f]{6}$/',
-            'widget_position' => 'nullable|string|in:bottom-right,bottom-left',
         ]);
 
-        Company::create($validated);
+        $company = Company::create($validated);
+        $company->chatbots()->create([
+            'name' => $company->name,
+            'slug' => 'default',
+            'goal_type' => 'assistant',
+        ]);
 
         return redirect()->route('admin.companies.index')
             ->with('success', 'Azienda creata.');
@@ -51,7 +53,7 @@ class CompanyController extends Controller
 
     public function show(Company $company): InertiaResponse
     {
-        $company->load('documents');
+        $company->load(['documents', 'chatbots']);
 
         return Inertia::render('Admin/Companies/Show', [
             'company' => $company,
@@ -77,27 +79,7 @@ class CompanyController extends Controller
             'website' => 'nullable|string|max:500|url',
             'phone' => 'nullable|string|max:50',
             'address' => 'nullable|string',
-            'widget_primary_color' => 'nullable|string|max:20|regex:/^#[0-9A-Fa-f]{6}$/',
-            'widget_position' => 'nullable|string|in:bottom-right,bottom-left',
-            'remove_icon' => 'nullable|boolean',
         ]);
-
-        if ($request->boolean('remove_icon') && $company->widget_icon) {
-            Storage::disk('public')->delete($company->widget_icon);
-            $validated['widget_icon'] = null;
-        }
-
-        if ($request->hasFile('widget_icon')) {
-            $request->validate(['widget_icon' => 'image|mimes:jpeg,png,gif,webp|max:512']);
-            if ($company->widget_icon) {
-                Storage::disk('public')->delete($company->widget_icon);
-            }
-            $path = $request->file('widget_icon')->store(
-                'company-widget-icons',
-                'public'
-            );
-            $validated['widget_icon'] = $path;
-        }
 
         $websiteChanged = ($validated['website'] ?? null) !== $company->website;
         $company->update($validated);
@@ -116,7 +98,7 @@ class CompanyController extends Controller
             $message = 'Inserisci prima l’URL del sito web dell’azienda.';
             if ($request->header('X-Inertia')) {
                 return Inertia::render('Admin/Companies/Show', [
-                    'company' => $company->load('documents'),
+                    'company' => $company->load(['documents', 'chatbots']),
                     'appUrl' => rtrim(config('app.url'), '/'),
                     'hasWebsiteContent' => ! empty($company->website_extracted_text),
                     'syncWebsiteUrl' => route('admin.companies.sync-website', $company),
@@ -129,7 +111,7 @@ class CompanyController extends Controller
         $message = 'Aggiornamento contenuto dal sito avviato. Il testo verrà estratto in background.';
         if ($request->header('X-Inertia')) {
             return Inertia::render('Admin/Companies/Show', [
-                'company' => $company->load('documents'),
+                'company' => $company->load(['documents', 'chatbots']),
                 'appUrl' => rtrim(config('app.url'), '/'),
                 'hasWebsiteContent' => ! empty($company->website_extracted_text),
                 'syncWebsiteUrl' => route('admin.companies.sync-website', $company),

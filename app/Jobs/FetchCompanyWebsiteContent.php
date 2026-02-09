@@ -18,7 +18,7 @@ class FetchCompanyWebsiteContent implements ShouldQueue
     public int $tries = 2;
     public int $timeout = 120;
 
-    private const MAX_PAGES = 25;
+    private const MAX_PAGES = 50;
     private const MAX_CHARS_TOTAL = 100000;
     private const USER_AGENT = 'Mozilla/5.0 (compatible; CompanyChatbot/1.0)';
 
@@ -35,8 +35,16 @@ class FetchCompanyWebsiteContent implements ShouldQueue
         }
 
         $baseHost = parse_url($url, PHP_URL_HOST);
+        $baseUrl = $this->normalizeUrl($url);
+        $toVisit = $this->discoverUrlsViaSitemap($baseUrl, $baseHost);
+        if (empty($toVisit)) {
+            $toVisit = [$baseUrl];
+        } elseif (! in_array($baseUrl, $toVisit, true)) {
+            array_unshift($toVisit, $baseUrl);
+        }
+        $toVisit = array_slice(array_unique($toVisit), 0, self::MAX_PAGES);
+
         $visited = [];
-        $toVisit = [$this->normalizeUrl($url)];
         $allText = [];
 
         while (! empty($toVisit) && count($visited) < self::MAX_PAGES) {
@@ -55,14 +63,19 @@ class FetchCompanyWebsiteContent implements ShouldQueue
                     continue;
                 }
 
-                $html = $response->body();
-                $text = $this->extractTextFromHtml($html);
+                $body = $response->body();
+                $contentType = strtolower($response->header('Content-Type', ''));
+                if (str_contains($contentType, 'xml') && $this->isSitemapXml($body)) {
+                    continue;
+                }
+
+                $text = $this->extractTextFromHtml($body);
                 if ($text !== '') {
                     $allText[] = $text;
                 }
 
-                if (count($visited) < self::MAX_PAGES) {
-                    $links = $this->extractSameDomainLinks($html, $current, $baseHost);
+                if (count($visited) < self::MAX_PAGES && ! str_contains($contentType, 'xml')) {
+                    $links = $this->extractSameDomainLinks($body, $current, $baseHost);
                     foreach ($links as $link) {
                         $norm = $this->normalizeUrl($link);
                         if (! isset($visited[$norm]) && ! in_array($norm, $toVisit, true)) {
@@ -87,6 +100,105 @@ class FetchCompanyWebsiteContent implements ShouldQueue
         }
 
         $this->company->update(['website_extracted_text' => $combined ?: null]);
+    }
+
+    /**
+     * Scopre URL da sitemap.xml e/o robots.txt (Sitemap:). Supporta sitemap index e urlset.
+     */
+    private function discoverUrlsViaSitemap(string $baseUrl, string $baseHost): array
+    {
+        $urls = [];
+        $scheme = parse_url($baseUrl, PHP_URL_SCHEME) ?: 'https';
+        $origin = $scheme . '://' . $baseHost;
+
+        $sitemapCandidates = [
+            $origin . '/sitemap.xml',
+            $origin . '/sitemap_index.xml',
+            $origin . '/sitemap-index.xml',
+            $origin . '/sitemap_index.xml.gz',
+            $origin . '/sitemap.xml.gz',
+        ];
+
+        $robotsUrl = $origin . '/robots.txt';
+        try {
+            $robots = Http::withHeaders(['User-Agent' => self::USER_AGENT])->timeout(10)->get($robotsUrl);
+            if ($robots->successful() && preg_match_all('/^Sitemap:\s*(\S+)/mi', $robots->body(), $m)) {
+                foreach ($m[1] as $sitemap) {
+                    $sitemapCandidates[] = trim($sitemap);
+                }
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
+
+        $fetched = [];
+        foreach ($sitemapCandidates as $sitemapUrl) {
+            if (isset($fetched[$sitemapUrl])) {
+                continue;
+            }
+            $list = $this->fetchUrlsFromSitemap($sitemapUrl, $baseHost, $fetched);
+            $urls = array_merge($urls, $list);
+            $fetched[$sitemapUrl] = true;
+        }
+
+        return array_values(array_unique(array_slice($urls, 0, self::MAX_PAGES)));
+    }
+
+    private function fetchUrlsFromSitemap(string $sitemapUrl, string $baseHost, array &$fetched): array
+    {
+        $urls = [];
+        try {
+            $response = Http::withHeaders(['User-Agent' => self::USER_AGENT])->timeout(15)->get($sitemapUrl);
+            if (! $response->successful()) {
+                return [];
+            }
+            $body = $response->body();
+            if (str_ends_with(strtolower($sitemapUrl), '.gz')) {
+                $body = @gzdecode($body);
+                if ($body === false) {
+                    return [];
+                }
+            }
+            $xml = @simplexml_load_string($body);
+            if ($xml === false) {
+                return [];
+            }
+            $xml->registerXPathNamespace('sm', 'http://www.sitemaps.org/schemas/sitemap/0.9');
+            $xml->registerXPathNamespace('x', 'http://www.sitemaps.org/schemas/sitemap/0.9');
+
+            $locList = $xml->xpath('//sm:url/sm:loc') ?: $xml->xpath('//url/loc') ?: $xml->xpath('//loc');
+            if ($locList !== false && count($locList) > 0) {
+                foreach ($locList as $loc) {
+                    $href = (string) $loc;
+                    $host = parse_url($href, PHP_URL_HOST);
+                    if ($host === $baseHost) {
+                        $urls[] = $this->normalizeUrl($href);
+                    }
+                }
+                return $urls;
+            }
+
+            $sitemapList = $xml->xpath('//sm:sitemap/sm:loc') ?: $xml->xpath('//sitemap/loc');
+            if ($sitemapList !== false && count($sitemapList) > 0) {
+                foreach ($sitemapList as $loc) {
+                    $childUrl = (string) $loc;
+                    if (! isset($fetched[$childUrl])) {
+                        $fetched[$childUrl] = true;
+                        foreach ($this->fetchUrlsFromSitemap($childUrl, $baseHost, $fetched) as $u) {
+                            $urls[] = $u;
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::debug('FetchCompanyWebsiteContent sitemap failed', ['url' => $sitemapUrl, 'error' => $e->getMessage()]);
+        }
+        return $urls;
+    }
+
+    private function isSitemapXml(string $body): bool
+    {
+        return str_contains($body, '<sitemap') || str_contains($body, '<urlset') || str_contains($body, '<sitemapindex');
     }
 
     private function isValidUrl(string $url): bool

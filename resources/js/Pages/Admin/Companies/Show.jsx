@@ -1,12 +1,16 @@
 import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
 
+const GOAL_LABELS = {
+  assistant: 'Solo assistente',
+  lead_capture: 'Assistente + raccolta email/telefono',
+  custom: 'Obiettivo personalizzato',
+};
+
 export default function CompaniesShow({ company, appUrl, hasWebsiteContent, syncWebsiteUrl }) {
   const { flash, csrf_token } = usePage().props;
   const apiUrl = appUrl || (typeof window !== 'undefined' ? window.location.origin : '');
-  const embedSnippet = apiUrl
-    ? `<script src="${apiUrl}/widget.js" data-api-key="${company.api_key || ''}" data-api-url="${apiUrl}"></script>`
-    : '';
+  const chatbots = company.chatbots || [];
   const documentForm = useForm({
     document: null,
   });
@@ -49,33 +53,60 @@ export default function CompaniesShow({ company, appUrl, hasWebsiteContent, sync
         </Link>
       </div>
 
-      {company.api_key && (
-        <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-medium text-slate-900">Chatbot per il sito</h2>
-          <p className="mb-4 text-sm text-slate-600">
-            Inserisci il codice qui sotto nel sito web del cliente per attivare il chatbot basato sui documenti caricati.
-          </p>
-          <div className="mb-4">
-            <label className="mb-1 block text-xs font-medium text-slate-500">API Key (per riferimento)</label>
-            <code className="block break-all rounded-lg bg-slate-100 px-3 py-2 text-sm text-slate-800">
-              {company.api_key}
-            </code>
-          </div>
-          <div>
-            <label className="mb-1 block text-xs font-medium text-slate-500">Codice da incorporare</label>
-            <pre className="overflow-x-auto rounded-lg bg-slate-900 px-4 py-3 text-sm text-slate-100">
-              {embedSnippet}
-            </pre>
-            <button
-              type="button"
-              onClick={() => navigator.clipboard?.writeText(embedSnippet)}
-              className="mt-2 rounded-lg bg-slate-200 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-300"
-            >
-              Copia codice
-            </button>
-          </div>
+      <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-medium text-slate-900">Chatbot</h2>
+          <Link
+            href={`/admin/companies/${company.id}/chatbots`}
+            className="rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-primary-700"
+          >
+            Gestisci chatbot
+          </Link>
         </div>
-      )}
+        {chatbots.length === 0 ? (
+          <p className="text-sm text-slate-500">Nessun chatbot. Aggiungine uno dalla gestione chatbot.</p>
+        ) : (
+          <ul className="space-y-6">
+            {chatbots.map((bot) => {
+              const embedSnippet = apiUrl
+                ? `<script src="${apiUrl}/widget.js" data-api-key="${bot.api_key || ''}" data-api-url="${apiUrl}"></script>`
+                : '';
+              return (
+                <li
+                  key={bot.id}
+                  className="rounded-xl border border-slate-100 bg-slate-50/50 p-4"
+                >
+                  <div className="mb-2 flex items-center justify-between">
+                    <span className="font-medium text-slate-900">{bot.name}</span>
+                    <span className="text-xs text-slate-500">
+                      {GOAL_LABELS[bot.goal_type] || bot.goal_type}
+                    </span>
+                  </div>
+                  <div className="mb-2">
+                    <label className="mb-0.5 block text-xs font-medium text-slate-500">API Key</label>
+                    <code className="block break-all rounded bg-slate-200 px-2 py-1 text-xs text-slate-800">
+                      {bot.api_key}
+                    </code>
+                  </div>
+                  <div>
+                    <label className="mb-0.5 block text-xs font-medium text-slate-500">Codice embed</label>
+                    <pre className="overflow-x-auto rounded-lg bg-slate-900 px-3 py-2 text-xs text-slate-100">
+                      {embedSnippet}
+                    </pre>
+                    <button
+                      type="button"
+                      onClick={() => navigator.clipboard?.writeText(embedSnippet)}
+                      className="mt-1.5 rounded bg-slate-300 px-2 py-1 text-xs font-medium text-slate-700 hover:bg-slate-400"
+                    >
+                      Copia
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        )}
+      </div>
 
       {company.website && (
         <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">

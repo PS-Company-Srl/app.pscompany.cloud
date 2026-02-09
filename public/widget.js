@@ -13,6 +13,21 @@
   var history = [];
   var open = false;
   var config = { company_name: 'Assistente', welcome_message: 'Ciao! Come posso aiutarti?', primary_color: '#4f46e5', position: 'bottom-right', icon_url: null };
+  var sessionStorageKey = 'pscompany_sid_' + (apiKey ? apiKey.replace(/\W/g, '_').slice(0, 20) : 'default');
+  function getSessionId() {
+    try {
+      return localStorage.getItem(sessionStorageKey) || '';
+    } catch (e) { return ''; }
+  }
+  function setSessionId(id) {
+    try {
+      if (id) localStorage.setItem(sessionStorageKey, id);
+    } catch (e) {}
+  }
+  // Genera subito un session_id lato client se manca, così email e telefono restano nella stessa conversazione
+  if (!getSessionId()) {
+    setSessionId('sess_' + Date.now() + '_' + Math.random().toString(36).substr(2, 12));
+  }
 
   function darkenHex(hex, pct) {
     var n = hex.replace(/^#/, '');
@@ -145,6 +160,7 @@
         try {
           var data = JSON.parse(xhr.responseText);
           reply = data.reply || reply;
+          if (data.session_id) setSessionId(data.session_id);
         } catch (e) {}
       }
       addMessage('assistant', reply);
@@ -157,7 +173,8 @@
       sendBtn.disabled = false;
       addMessage('assistant', 'Errore di connessione. Riprova.');
     };
-    xhr.send(JSON.stringify({ message: text, history: history.slice(-20) }));
+    var payload = { message: text, history: history.slice(-20), session_id: getSessionId() };
+    xhr.send(JSON.stringify(payload));
   }
 
   btn.addEventListener('click', function () {

@@ -14,7 +14,7 @@ function getPathname(url) {
   }
 }
 
-export default function AdminLayout({ children }) {
+export default function CustomerLayout({ children }) {
   const page = usePage();
   const { auth } = page.props;
   const path = getPathname(page.url);
@@ -25,43 +25,42 @@ export default function AdminLayout({ children }) {
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-1">
             <Link
-              href="/admin/dashboard"
+              href="/dashboard"
               className="rounded-lg px-2 py-1.5 text-lg font-semibold tracking-tight text-slate-900"
             >
-              Admin
+              {auth?.user?.name}
             </Link>
             <nav className="ml-8 flex gap-1">
               <Link
-                href="/admin/dashboard"
-                className={path === '/admin/dashboard' ? navLinkActive : navLink}
+                href="/dashboard"
+                className={path === '/dashboard' ? navLinkActive : navLink}
               >
                 Dashboard
               </Link>
               <Link
-                href="/admin/companies"
+                href="/dashboard/chatbots"
                 className={
-                  path.startsWith('/admin/companies') ? navLinkActive : navLink
+                  path.startsWith('/dashboard/chatbots') ? navLinkActive : navLink
                 }
               >
-                Aziende
+                Chatbot
               </Link>
             </nav>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-slate-500">{auth?.user?.name}</span>
-            <Link
-              href="/logout"
-              method="post"
-              as="button"
-              className="cursor-pointer rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50"
-            >
-              Esci
-            </Link>
-          </div>
+          <Link
+            href="/logout"
+            method="post"
+            as="button"
+            className="cursor-pointer rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-50"
+          >
+            Esci
+          </Link>
         </div>
       </header>
 
-      <main className="w-full min-w-0 mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{children}</main>
+      <main className="mx-auto w-full min-w-0 max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+        {children}
+      </main>
     </div>
   );
 }

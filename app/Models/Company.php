@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class Company extends Model
@@ -17,16 +16,7 @@ class Company extends Model
         'website_extracted_text',
         'phone',
         'address',
-        'api_key',
-        'widget_primary_color',
-        'widget_position',
-        'widget_icon',
     ];
-
-    /** Valori ammessi per widget_position */
-    public const WIDGET_POSITIONS = ['bottom-right', 'bottom-left'];
-
-    protected $appends = ['widget_icon_url'];
 
     protected static function booted(): void
     {
@@ -34,10 +24,12 @@ class Company extends Model
             if (empty($company->slug)) {
                 $company->slug = Str::slug($company->name);
             }
-            if (empty($company->api_key)) {
-                $company->api_key = 'ck_' . Str::random(40);
-            }
         });
+    }
+
+    public function chatbots(): HasMany
+    {
+        return $this->hasMany(Chatbot::class);
     }
 
     /**
@@ -70,14 +62,5 @@ class Company extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(CompanyDocument::class);
-    }
-
-    /** URL assoluto dell'icona widget (null se non impostata). */
-    public function getWidgetIconUrlAttribute(): ?string
-    {
-        if (empty($this->widget_icon) || ! Storage::disk('public')->exists($this->widget_icon)) {
-            return null;
-        }
-        return url(Storage::disk('public')->url($this->widget_icon));
     }
 }

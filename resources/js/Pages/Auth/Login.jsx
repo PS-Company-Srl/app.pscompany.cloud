@@ -69,7 +69,7 @@ export default function Login() {
             <button
               type="submit"
               disabled={processing}
-              className="w-full rounded-xl bg-primary-600 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary-700 disabled:opacity-50"
+              className="w-full cursor-pointer rounded-xl bg-primary-600 py-3 text-sm font-medium text-white shadow-sm transition-colors hover:bg-primary-700 disabled:opacity-50"
             >
               Accedi
             </button>
