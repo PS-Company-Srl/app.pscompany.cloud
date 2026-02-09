@@ -1,8 +1,8 @@
 import { Head, Link, useForm, usePage, router } from '@inertiajs/react';
 import AdminLayout from '../../../Layouts/AdminLayout';
 
-export default function CompaniesShow({ company, appUrl }) {
-  const { flash } = usePage().props;
+export default function CompaniesShow({ company, appUrl, hasWebsiteContent, syncWebsiteUrl }) {
+  const { flash, csrf_token } = usePage().props;
   const apiUrl = appUrl || (typeof window !== 'undefined' ? window.location.origin : '');
   const embedSnippet = apiUrl
     ? `<script src="${apiUrl}/widget.js" data-api-key="${company.api_key || ''}" data-api-url="${apiUrl}"></script>`
@@ -77,6 +77,31 @@ export default function CompaniesShow({ company, appUrl }) {
         </div>
       )}
 
+      {company.website && (
+        <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-4 text-lg font-medium text-slate-900">Contenuto dal sito web</h2>
+          <p className="mb-4 text-sm text-slate-600">
+            Il chatbot usa il contenuto del sito dell’azienda (analizzato in automatico) e i documenti caricati sotto.
+          </p>
+          {hasWebsiteContent && (
+            <p className="mb-4 text-sm text-emerald-700">Contenuto dal sito incluso nel chatbot.</p>
+          )}
+          <form
+            action={syncWebsiteUrl || `/admin/companies/${company.id}/sync-website`}
+            method="post"
+            className="inline"
+          >
+            <input type="hidden" name="_token" value={csrf_token} />
+            <button
+              type="submit"
+              className="cursor-pointer rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+            >
+              {hasWebsiteContent ? 'Rianalizza sito' : 'Analizza sito e aggiorna contenuto'}
+            </button>
+          </form>
+        </div>
+      )}
+
       {(company.email || company.website || company.phone || company.address) && (
         <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-lg font-medium text-slate-900">Dati azienda</h2>
@@ -118,9 +143,15 @@ export default function CompaniesShow({ company, appUrl }) {
         </div>
       )}
 
-      {flash?.success && (
-        <div className="mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800">
-          {flash.success}
+      {(flash?.success || flash?.error) && (
+        <div
+          className={
+            flash.error
+              ? 'mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800'
+              : 'mb-6 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800'
+          }
+        >
+          {flash.error || flash.success}
         </div>
       )}
 

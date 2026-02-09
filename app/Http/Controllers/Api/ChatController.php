@@ -23,6 +23,9 @@ class ChatController extends Controller
         return response()->json([
             'company_name' => $company->name,
             'welcome_message' => "Ciao! Sono l'assistente di {$company->name}. Come posso aiutarti?",
+            'primary_color' => $company->widget_primary_color ?? '#4f46e5',
+            'position' => $company->widget_position ?? 'bottom-right',
+            'icon_url' => $company->widget_icon_url,
         ]);
     }
 

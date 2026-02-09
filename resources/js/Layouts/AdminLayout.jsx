@@ -20,7 +20,7 @@ export default function AdminLayout({ children }) {
   const path = getPathname(page.url);
 
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen w-full min-w-0 bg-slate-50">
       <header className="sticky top-0 z-10 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-1">
@@ -61,7 +61,7 @@ export default function AdminLayout({ children }) {
         </div>
       </header>
 
-      <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{children}</main>
+      <main className="w-full min-w-0 mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">{children}</main>
     </div>
   );
 }

@@ -4,6 +4,27 @@
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
 @source '../**/*.js';
+@source '../**/*.jsx';
+
+@layer base {
+    html {
+        -webkit-text-size-adjust: 100%;
+        width: 100%;
+    }
+    body {
+        @apply antialiased;
+        width: 100%;
+        max-width: 100vw;
+        min-width: 0;
+        margin: 0;
+    }
+    /* Root Inertia/React mount – evita overflow e taglio a destra */
+    #app {
+        width: 100%;
+        max-width: 100%;
+        min-width: 0;
+    }
+}
 
 @theme {
     --font-sans: 'DM Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',

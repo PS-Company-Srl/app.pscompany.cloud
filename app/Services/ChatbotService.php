@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Log;
 class ChatbotService
 {
     private const MODEL = 'gpt-4o-mini';
-    private const MAX_CONTEXT_CHARS = 12000;
+    private const MAX_CONTEXT_CHARS = 14000;
 
     public function reply(Company $company, string $userMessage, array $history = []): string
     {
@@ -55,9 +55,10 @@ class ChatbotService
         $base .= "Rispondi in modo utile e professionale, usando SOLO le informazioni qui sotto quando disponibili. ";
         $base .= "Se non trovi la risposta nel materiale, dillo con cortesia e invita a contattare l'azienda. ";
         $base .= "Rispondi in italiano, in modo conciso.\n\n";
+        $base .= "Il materiale sotto include: (1) il contenuto del sito web dell'azienda, (2) eventuali documenti caricati. Usali per rispondere in modo pertinente.\n\n";
 
         if ($context !== '') {
-            $base .= "--- Materiale informativo sull'azienda ---\n\n" . $context . "\n\n--- Fine materiale ---";
+            $base .= "--- Materiale informativo (sito web + documenti) ---\n\n" . $context . "\n\n--- Fine materiale ---";
         } else {
             $base .= "Non hai ancora materiale informativo: rispondi in modo generico e invita a contattare l'azienda per dettagli.";
         }

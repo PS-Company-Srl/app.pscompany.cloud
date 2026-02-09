@@ -3,15 +3,17 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\FetchCompanyWebsiteContent;
 use App\Models\Company;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
-use Inertia\Response;
+use Inertia\Response as InertiaResponse;
 
 class CompanyController extends Controller
 {
-    public function index(): Response
+    public function index(): InertiaResponse
     {
         $companies = Company::query()
             ->withCount('documents')
@@ -23,7 +25,7 @@ class CompanyController extends Controller
         ]);
     }
 
-    public function create(): Response
+    public function create(): InertiaResponse
     {
         return Inertia::render('Admin/Companies/Create');
     }
@@ -37,6 +39,8 @@ class CompanyController extends Controller
             'website' => 'nullable|string|max:500|url',
             'phone' => 'nullable|string|max:50',
             'address' => 'nullable|string',
+            'widget_primary_color' => 'nullable|string|max:20|regex:/^#[0-9A-Fa-f]{6}$/',
+            'widget_position' => 'nullable|string|in:bottom-right,bottom-left',
         ]);
 
         Company::create($validated);
@@ -45,17 +49,19 @@ class CompanyController extends Controller
             ->with('success', 'Azienda creata.');
     }
 
-    public function show(Company $company): Response
+    public function show(Company $company): InertiaResponse
     {
         $company->load('documents');
 
         return Inertia::render('Admin/Companies/Show', [
             'company' => $company,
             'appUrl' => rtrim(config('app.url'), '/'),
+            'hasWebsiteContent' => ! empty($company->website_extracted_text),
+            'syncWebsiteUrl' => route('admin.companies.sync-website', $company),
         ]);
     }
 
-    public function edit(Company $company): Response
+    public function edit(Company $company): InertiaResponse
     {
         return Inertia::render('Admin/Companies/Edit', [
             'company' => $company,
@@ -71,12 +77,66 @@ class CompanyController extends Controller
             'website' => 'nullable|string|max:500|url',
             'phone' => 'nullable|string|max:50',
             'address' => 'nullable|string',
+            'widget_primary_color' => 'nullable|string|max:20|regex:/^#[0-9A-Fa-f]{6}$/',
+            'widget_position' => 'nullable|string|in:bottom-right,bottom-left',
+            'remove_icon' => 'nullable|boolean',
         ]);
 
+        if ($request->boolean('remove_icon') && $company->widget_icon) {
+            Storage::disk('public')->delete($company->widget_icon);
+            $validated['widget_icon'] = null;
+        }
+
+        if ($request->hasFile('widget_icon')) {
+            $request->validate(['widget_icon' => 'image|mimes:jpeg,png,gif,webp|max:512']);
+            if ($company->widget_icon) {
+                Storage::disk('public')->delete($company->widget_icon);
+            }
+            $path = $request->file('widget_icon')->store(
+                'company-widget-icons',
+                'public'
+            );
+            $validated['widget_icon'] = $path;
+        }
+
+        $websiteChanged = ($validated['website'] ?? null) !== $company->website;
         $company->update($validated);
+
+        if ($websiteChanged && ! empty($company->website)) {
+            FetchCompanyWebsiteContent::dispatch($company);
+        }
 
         return redirect()->route('admin.companies.index')
             ->with('success', 'Azienda aggiornata.');
+    }
+
+    public function syncWebsite(Request $request, Company $company): RedirectResponse|InertiaResponse
+    {
+        if (empty($company->website)) {
+            $message = 'Inserisci prima l’URL del sito web dell’azienda.';
+            if ($request->header('X-Inertia')) {
+                return Inertia::render('Admin/Companies/Show', [
+                    'company' => $company->load('documents'),
+                    'appUrl' => rtrim(config('app.url'), '/'),
+                    'hasWebsiteContent' => ! empty($company->website_extracted_text),
+                    'syncWebsiteUrl' => route('admin.companies.sync-website', $company),
+                    'flash' => ['error' => $message],
+                ]);
+            }
+            return redirect()->route('admin.companies.show', $company)->with('error', $message);
+        }
+        FetchCompanyWebsiteContent::dispatch($company);
+        $message = 'Aggiornamento contenuto dal sito avviato. Il testo verrà estratto in background.';
+        if ($request->header('X-Inertia')) {
+            return Inertia::render('Admin/Companies/Show', [
+                'company' => $company->load('documents'),
+                'appUrl' => rtrim(config('app.url'), '/'),
+                'hasWebsiteContent' => ! empty($company->website_extracted_text),
+                'syncWebsiteUrl' => route('admin.companies.sync-website', $company),
+                'flash' => ['success' => $message],
+            ]);
+        }
+        return redirect()->route('admin.companies.show', $company)->with('success', $message);
     }
 
     public function destroy(Company $company): RedirectResponse

@@ -47,8 +47,8 @@ export default function CompaniesIndex({ companies }) {
         />
       </div>
 
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <table className="min-w-full">
+      <div className="w-full overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <table className="min-w-full table-auto">
           <thead>
             <tr className="border-b border-slate-200 bg-slate-50/80">
               <th className="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider text-slate-500">

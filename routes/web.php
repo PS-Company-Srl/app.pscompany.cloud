@@ -24,9 +24,11 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::resource('companies', CompanyController::class)->names('companies');
+    Route::post('companies/{company}/sync-website', [CompanyController::class, 'syncWebsite'])
+        ->name('companies.sync-website');
     Route::post('companies/{company}/documents', [CompanyDocumentController::class, 'store'])
         ->name('companies.documents.store');
     Route::delete('companies/{company}/documents/{document}', [CompanyDocumentController::class, 'destroy'])
         ->name('companies.documents.destroy');
+    Route::resource('companies', CompanyController::class)->names('companies');
 });
