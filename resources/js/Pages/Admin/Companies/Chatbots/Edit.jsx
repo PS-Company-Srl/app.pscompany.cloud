@@ -13,6 +13,8 @@ export default function AdminCompaniesChatbotsEdit({ company, chatbot, goalTypes
     custom_goal: chatbot.custom_goal ?? '',
     widget_primary_color: chatbot.widget_primary_color ?? '#4f46e5',
     widget_position: chatbot.widget_position ?? 'bottom-right',
+    widget_welcome_message: chatbot.widget_welcome_message ?? '',
+    widget_auto_open_after_seconds: chatbot.widget_auto_open_after_seconds ?? 20,
     widget_icon: null,
     remove_icon: false,
   });
@@ -31,6 +33,8 @@ export default function AdminCompaniesChatbotsEdit({ company, chatbot, goalTypes
       formData.append('custom_goal', data.goal_type === 'custom' ? (data.custom_goal || '') : '');
       formData.append('widget_primary_color', data.widget_primary_color || '');
       formData.append('widget_position', data.widget_position || '');
+      formData.append('widget_welcome_message', data.widget_welcome_message ?? '');
+      formData.append('widget_auto_open_after_seconds', String(data.widget_auto_open_after_seconds ?? 20));
       formData.append('remove_icon', removeIcon ? '1' : '0');
       if (hasFile) formData.append('widget_icon', data.widget_icon);
       router.post(base, formData, { forceFormData: true });
@@ -106,6 +110,31 @@ export default function AdminCompaniesChatbotsEdit({ company, chatbot, goalTypes
         <div className="border-t border-slate-200 pt-6">
           <h2 className="mb-4 text-lg font-medium text-slate-900">Aspetto widget</h2>
           <div className="space-y-4">
+            <div>
+              <label htmlFor="widget_welcome_message" className={labelClass}>Frase iniziale</label>
+              <textarea
+                id="widget_welcome_message"
+                value={data.widget_welcome_message}
+                onChange={(e) => setData('widget_welcome_message', e.target.value)}
+                rows={2}
+                placeholder="Ciao! Come posso aiutarti?"
+                className={inputClass}
+              />
+              <p className="mt-1 text-xs text-slate-500">Messaggio di benvenuto mostrato all&apos;apertura della chat. Lasciare vuoto per usare il default.</p>
+            </div>
+            <div>
+              <label htmlFor="widget_auto_open_after_seconds" className={labelClass}>Apertura automatica (secondi)</label>
+              <input
+                id="widget_auto_open_after_seconds"
+                type="number"
+                min={0}
+                max={300}
+                value={data.widget_auto_open_after_seconds}
+                onChange={(e) => setData('widget_auto_open_after_seconds', e.target.value ? parseInt(e.target.value, 10) : 0)}
+                className={inputClass}
+              />
+              <p className="mt-1 text-xs text-slate-500">0 = disabilitata. Il pannello si apre da solo dopo questo numero di secondi.</p>
+            </div>
             <div>
               <label htmlFor="widget_primary_color" className={labelClass}>Colore</label>
               <div className="mt-1.5 flex items-center gap-3">

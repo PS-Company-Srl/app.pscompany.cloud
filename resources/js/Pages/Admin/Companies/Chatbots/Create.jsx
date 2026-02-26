@@ -13,6 +13,8 @@ export default function AdminCompaniesChatbotsCreate({ company, goalTypes }) {
     custom_goal: '',
     widget_primary_color: '#4f46e5',
     widget_position: 'bottom-right',
+    widget_welcome_message: '',
+    widget_auto_open_after_seconds: 20,
   });
 
   return (
@@ -95,6 +97,31 @@ export default function AdminCompaniesChatbotsCreate({ company, goalTypes }) {
         <div className="border-t border-slate-200 pt-6">
           <h2 className="mb-4 text-lg font-medium text-slate-900">Widget (opzionale)</h2>
           <div className="space-y-4">
+            <div>
+              <label htmlFor="widget_welcome_message" className={labelClass}>Frase iniziale</label>
+              <textarea
+                id="widget_welcome_message"
+                value={data.widget_welcome_message}
+                onChange={(e) => setData('widget_welcome_message', e.target.value)}
+                rows={2}
+                placeholder="Ciao! Come posso aiutarti?"
+                className={inputClass}
+              />
+              <p className="mt-1 text-xs text-slate-500">Messaggio di benvenuto. Vuoto = default.</p>
+            </div>
+            <div>
+              <label htmlFor="widget_auto_open_after_seconds" className={labelClass}>Apertura automatica (secondi)</label>
+              <input
+                id="widget_auto_open_after_seconds"
+                type="number"
+                min={0}
+                max={300}
+                value={data.widget_auto_open_after_seconds}
+                onChange={(e) => setData('widget_auto_open_after_seconds', e.target.value ? parseInt(e.target.value, 10) : 0)}
+                className={inputClass}
+              />
+              <p className="mt-1 text-xs text-slate-500">0 = disabilitata. Default 20.</p>
+            </div>
             <div>
               <label htmlFor="widget_primary_color" className={labelClass}>Colore</label>
               <div className="mt-1.5 flex items-center gap-3">

@@ -20,6 +20,8 @@ class Chatbot extends Model
         'widget_primary_color',
         'widget_position',
         'widget_icon',
+        'widget_welcome_message',
+        'widget_auto_open_after_seconds',
     ];
 
     public const GOAL_ASSISTANT = 'assistant';

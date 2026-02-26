@@ -22,13 +22,16 @@ class ChatController extends Controller
     {
         $chatbot = $request->attributes->get('chatbot');
         $company = $chatbot->company;
+        $welcomeMessage = $chatbot->widget_welcome_message
+            ?? "Ciao! Sono l'assistente di {$company->name}. Come posso aiutarti?";
 
         return response()->json([
             'company_name' => $chatbot->name,
-            'welcome_message' => "Ciao! Sono l'assistente di {$company->name}. Come posso aiutarti?",
+            'welcome_message' => $welcomeMessage,
             'primary_color' => $chatbot->widget_primary_color ?? '#4f46e5',
             'position' => $chatbot->widget_position ?? 'bottom-right',
             'icon_url' => $chatbot->widget_icon_url,
+            'auto_open_after_seconds' => (int) ($chatbot->widget_auto_open_after_seconds ?? 20),
         ]);
     }
 

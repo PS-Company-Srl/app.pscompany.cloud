@@ -12,7 +12,7 @@
 
   var history = [];
   var open = false;
-  var config = { company_name: 'Assistente', welcome_message: 'Ciao! Come posso aiutarti?', primary_color: '#4f46e5', position: 'bottom-right', icon_url: null };
+  var config = { company_name: 'Assistente', welcome_message: 'Ciao! Come posso aiutarti?', primary_color: '#4f46e5', position: 'bottom-right', icon_url: null, auto_open_after_seconds: 20 };
   var sessionStorageKey = 'pscompany_sid_' + (apiKey ? apiKey.replace(/\W/g, '_').slice(0, 20) : 'default');
   function getSessionId() {
     try {
@@ -112,6 +112,7 @@
     }
   }
 
+  var autoOpenTimer = null;
   function fetchConfig() {
     var xhr = new XMLHttpRequest();
     xhr.open('GET', base + '/config', true);
@@ -124,6 +125,14 @@
           header.textContent = config.company_name || 'Chat';
           if (config.welcome_message && messagesEl.children.length === 0) {
             addMessage('assistant', config.welcome_message);
+          }
+          var sec = parseInt(config.auto_open_after_seconds, 10) || 0;
+          if (sec > 0 && !open) {
+            if (autoOpenTimer) clearTimeout(autoOpenTimer);
+            autoOpenTimer = setTimeout(function () {
+              autoOpenTimer = null;
+              if (!open) setOpen(true);
+            }, sec * 1000);
           }
         } catch (e) {}
       }
@@ -179,7 +188,10 @@
 
   btn.addEventListener('click', function () {
     setOpen(!open);
-    if (open && messagesEl.children.length === 0) fetchConfig();
+    if (open) {
+      if (autoOpenTimer) { clearTimeout(autoOpenTimer); autoOpenTimer = null; }
+      if (messagesEl.children.length === 0) fetchConfig();
+    }
   });
 
   form.addEventListener('submit', function (e) {

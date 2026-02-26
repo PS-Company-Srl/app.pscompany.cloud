@@ -42,6 +42,8 @@ class ChatbotController extends Controller
             'custom_goal' => 'nullable|string|max:2000',
             'widget_primary_color' => 'nullable|string|max:20|regex:/^#[0-9A-Fa-f]{6}$/',
             'widget_position' => 'nullable|string|in:bottom-right,bottom-left',
+            'widget_welcome_message' => 'nullable|string|max:2000',
+            'widget_auto_open_after_seconds' => 'nullable|integer|min:0|max:300',
         ]);
 
         $validated['company_id'] = $company->id;
@@ -85,6 +87,8 @@ class ChatbotController extends Controller
             'custom_goal' => 'nullable|string|max:2000',
             'widget_primary_color' => 'nullable|string|max:20|regex:/^#[0-9A-Fa-f]{6}$/',
             'widget_position' => 'nullable|string|in:bottom-right,bottom-left',
+            'widget_welcome_message' => 'nullable|string|max:2000',
+            'widget_auto_open_after_seconds' => 'nullable|integer|min:0|max:300',
             'remove_icon' => 'nullable|boolean',
         ]);
 
