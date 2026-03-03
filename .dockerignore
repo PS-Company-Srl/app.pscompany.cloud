@@ -1,0 +1,11 @@
+/node_modules
+/public/build
+/public/hot
+/vendor
+.git
+.env
+.env.*
+*.log
+.DS_Store
+.idea
+.vscode
