@@ -40,6 +40,7 @@ class ChatbotController extends Controller
             'slug' => 'nullable|string|max:100',
             'goal_type' => 'required|string|in:assistant,lead_capture,custom',
             'custom_goal' => 'nullable|string|max:2000',
+            'openai_api_key' => 'nullable|string|max:255',
             'widget_primary_color' => 'nullable|string|max:20|regex:/^#[0-9A-Fa-f]{6}$/',
             'widget_position' => 'nullable|string|in:bottom-right,bottom-left',
             'widget_welcome_message' => 'nullable|string|max:2000',
@@ -52,6 +53,9 @@ class ChatbotController extends Controller
         }
         if (empty($validated['slug'])) {
             $validated['slug'] = Str::slug($validated['name']);
+        }
+        if (empty($validated['openai_api_key'])) {
+            unset($validated['openai_api_key']);
         }
 
         $company->chatbots()->create($validated);
@@ -68,7 +72,9 @@ class ChatbotController extends Controller
 
         return Inertia::render('Admin/Companies/Chatbots/Edit', [
             'company' => $company,
-            'chatbot' => $chatbot,
+            'chatbot' => array_merge($chatbot->toArray(), [
+                'openai_api_key_set' => ! empty($chatbot->openai_api_key),
+            ]),
             'goalTypes' => Chatbot::GOAL_TYPES,
             'appUrl' => rtrim(config('app.url'), '/'),
         ]);
@@ -85,6 +91,8 @@ class ChatbotController extends Controller
             'slug' => 'nullable|string|max:100',
             'goal_type' => 'required|string|in:assistant,lead_capture,custom',
             'custom_goal' => 'nullable|string|max:2000',
+            'openai_api_key' => 'nullable|string|max:255',
+            'openai_api_key_clear' => 'nullable|boolean',
             'widget_primary_color' => 'nullable|string|max:20|regex:/^#[0-9A-Fa-f]{6}$/',
             'widget_position' => 'nullable|string|in:bottom-right,bottom-left',
             'widget_welcome_message' => 'nullable|string|max:2000',
@@ -107,6 +115,15 @@ class ChatbotController extends Controller
 
         if (empty($validated['custom_goal']) || $validated['goal_type'] !== 'custom') {
             $validated['custom_goal'] = null;
+        }
+
+        if ($request->boolean('openai_api_key_clear')) {
+            $validated['openai_api_key'] = null;
+        } elseif (array_key_exists('openai_api_key', $validated) && $validated['openai_api_key'] !== '') {
+            // only update when a new key is provided (never send existing key to frontend)
+            // validated value is the new key from the form
+        } else {
+            unset($validated['openai_api_key']);
         }
 
         $chatbot->update($validated);

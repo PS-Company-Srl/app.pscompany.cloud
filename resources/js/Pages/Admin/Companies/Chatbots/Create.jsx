@@ -11,6 +11,7 @@ export default function AdminCompaniesChatbotsCreate({ company, goalTypes }) {
     slug: '',
     goal_type: 'assistant',
     custom_goal: '',
+    openai_api_key: '',
     widget_primary_color: '#4f46e5',
     widget_position: 'bottom-right',
     widget_welcome_message: '',
@@ -93,6 +94,23 @@ export default function AdminCompaniesChatbotsCreate({ company, goalTypes }) {
             {errors.custom_goal && <p className="mt-1.5 text-sm text-red-600">{errors.custom_goal}</p>}
           </div>
         )}
+
+        <div className="border-t border-slate-200 pt-6">
+          <h2 className="mb-4 text-lg font-medium text-slate-900">OpenAI</h2>
+          <div className="mb-4">
+            <label htmlFor="openai_api_key" className={labelClass}>Chiave API OpenAI (opzionale)</label>
+            <input
+              id="openai_api_key"
+              type="password"
+              value={data.openai_api_key}
+              onChange={(e) => setData('openai_api_key', e.target.value)}
+              placeholder="Lascia vuoto per usare la chiave globale (OPENAI_API_KEY)"
+              className={inputClass}
+              autoComplete="off"
+            />
+            <p className="mt-1 text-xs text-slate-500">Chiave dedicata solo per questo chatbot. Se vuota viene usata la chiave globale.</p>
+          </div>
+        </div>
 
         <div className="border-t border-slate-200 pt-6">
           <h2 className="mb-4 text-lg font-medium text-slate-900">Widget (opzionale)</h2>

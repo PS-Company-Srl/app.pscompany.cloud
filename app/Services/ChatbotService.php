@@ -29,8 +29,14 @@ class ChatbotService
 
         $messages[] = ['role' => 'user', 'content' => $userMessage];
 
+        $apiKey = $chatbot->openai_api_key ?? config('services.openai.api_key');
+        if (empty($apiKey)) {
+            Log::warning('OpenAI API key missing for chatbot', ['chatbot_id' => $chatbot->id]);
+            return 'Mi dispiace, la chiave API OpenAI non è configurata per questo chatbot. Contatta l’amministratore.';
+        }
+
         $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . config('services.openai.api_key'),
+            'Authorization' => 'Bearer ' . $apiKey,
             'Content-Type' => 'application/json',
         ])->timeout(30)->post('https://api.openai.com/v1/chat/completions', [
             'model' => self::MODEL,

@@ -11,6 +11,8 @@ export default function AdminCompaniesChatbotsEdit({ company, chatbot, goalTypes
     slug: chatbot.slug ?? '',
     goal_type: chatbot.goal_type ?? 'assistant',
     custom_goal: chatbot.custom_goal ?? '',
+    openai_api_key: '',
+    openai_api_key_clear: false,
     widget_primary_color: chatbot.widget_primary_color ?? '#4f46e5',
     widget_position: chatbot.widget_position ?? 'bottom-right',
     widget_welcome_message: chatbot.widget_welcome_message ?? '',
@@ -36,6 +38,8 @@ export default function AdminCompaniesChatbotsEdit({ company, chatbot, goalTypes
       formData.append('widget_welcome_message', data.widget_welcome_message ?? '');
       formData.append('widget_auto_open_after_seconds', String(data.widget_auto_open_after_seconds ?? 20));
       formData.append('remove_icon', removeIcon ? '1' : '0');
+      if (data.openai_api_key) formData.append('openai_api_key', data.openai_api_key);
+      if (data.openai_api_key_clear) formData.append('openai_api_key_clear', '1');
       if (hasFile) formData.append('widget_icon', data.widget_icon);
       router.post(base, formData, { forceFormData: true });
     } else {
@@ -106,6 +110,38 @@ export default function AdminCompaniesChatbotsEdit({ company, chatbot, goalTypes
             />
           </div>
         )}
+
+        <div className="border-t border-slate-200 pt-6">
+          <h2 className="mb-4 text-lg font-medium text-slate-900">OpenAI</h2>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="openai_api_key" className={labelClass}>Chiave API OpenAI (opzionale)</label>
+              <input
+                id="openai_api_key"
+                type="password"
+                value={data.openai_api_key}
+                onChange={(e) => setData('openai_api_key', e.target.value)}
+                placeholder={chatbot.openai_api_key_set ? '•••••••• (lascia vuoto per non modificare)' : 'Usa la chiave globale dal .env se vuoto'}
+                className={inputClass}
+                autoComplete="off"
+              />
+              <p className="mt-1 text-xs text-slate-500">
+                Chiave dedicata solo per questo chatbot. Se vuota viene usata la chiave globale (OPENAI_API_KEY nel .env).
+              </p>
+              {chatbot.openai_api_key_set && (
+                <label className="mt-2 flex cursor-pointer items-center gap-2 text-sm text-slate-600">
+                  <input
+                    type="checkbox"
+                    checked={data.openai_api_key_clear}
+                    onChange={(e) => setData('openai_api_key_clear', e.target.checked)}
+                    className="rounded border-slate-300 text-primary-600"
+                  />
+                  Rimuovi chiave dedicata (usa la globale)
+                </label>
+              )}
+            </div>
+          </div>
+        </div>
 
         <div className="border-t border-slate-200 pt-6">
           <h2 className="mb-4 text-lg font-medium text-slate-900">Aspetto widget</h2>

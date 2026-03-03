@@ -15,6 +15,7 @@ class Chatbot extends Model
         'name',
         'slug',
         'api_key',
+        'openai_api_key',
         'goal_type',
         'custom_goal',
         'widget_primary_color',
@@ -37,6 +38,8 @@ class Chatbot extends Model
     public const WIDGET_POSITIONS = ['bottom-right', 'bottom-left'];
 
     protected $appends = ['widget_icon_url'];
+
+    protected $hidden = ['openai_api_key'];
 
     protected static function booted(): void
     {
