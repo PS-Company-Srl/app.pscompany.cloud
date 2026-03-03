@@ -78,9 +78,17 @@ export default function CompaniesShow({ company, appUrl, hasWebsiteContent, sync
                 >
                   <div className="mb-2 flex items-center justify-between">
                     <span className="font-medium text-slate-900">{bot.name}</span>
-                    <span className="text-xs text-slate-500">
-                      {GOAL_LABELS[bot.goal_type] || bot.goal_type}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <Link
+                        href={`/admin/companies/${company.id}/chatbots/${bot.id}/conversations`}
+                        className="text-xs font-medium text-primary-600 hover:text-primary-700"
+                      >
+                        Conversazioni
+                      </Link>
+                      <span className="text-xs text-slate-500">
+                        {GOAL_LABELS[bot.goal_type] || bot.goal_type}
+                      </span>
+                    </div>
                   </div>
                   <div className="mb-2">
                     <label className="mb-0.5 block text-xs font-medium text-slate-500">API Key</label>

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\ChatbotController as AdminChatbotController;
 use App\Http\Controllers\Admin\CompanyController;
+use App\Http\Controllers\Admin\ConversationController as AdminConversationController;
 use App\Http\Controllers\Admin\CompanyDocumentController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Auth\LoginController;
@@ -41,6 +42,10 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
     Route::delete('companies/{company}/documents/{document}', [CompanyDocumentController::class, 'destroy'])
         ->name('companies.documents.destroy');
     Route::resource('companies.chatbots', AdminChatbotController::class)->names('companies.chatbots')->scoped();
+    Route::get('companies/{company}/chatbots/{chatbot}/conversations', [AdminConversationController::class, 'index'])
+        ->name('companies.chatbots.conversations.index');
+    Route::get('companies/{company}/chatbots/{chatbot}/conversations/{conversation}', [AdminConversationController::class, 'show'])
+        ->name('companies.chatbots.conversations.show');
     Route::resource('companies', CompanyController::class)->names('companies');
 });
 

@@ -71,6 +71,12 @@ export default function AdminCompaniesChatbotsIndex({ company, chatbots, appUrl 
                   </div>
                   <div className="flex gap-2">
                     <Link
+                      href={`/admin/companies/${company.id}/chatbots/${bot.id}/conversations`}
+                      className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
+                    >
+                      Conversazioni
+                    </Link>
+                    <Link
                       href={`/admin/companies/${company.id}/chatbots/${bot.id}/edit`}
                       className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-medium text-slate-700 hover:bg-slate-50"
                     >
