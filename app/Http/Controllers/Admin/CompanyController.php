@@ -85,7 +85,7 @@ class CompanyController extends Controller
         $company->update($validated);
 
         if ($websiteChanged && ! empty($company->website)) {
-            $this->dispatchScraper($company);
+            FetchCompanyWebsiteContent::dispatch($company);
         }
 
         return redirect()->route('admin.companies.index')
@@ -107,18 +107,18 @@ class CompanyController extends Controller
             }
             return redirect()->route('admin.companies.show', $company)->with('error', $message);
         }
-        [$message, $isError] = $this->runScraperAndGetMessage($company);
-        $company->refresh();
+        FetchCompanyWebsiteContent::dispatch($company);
+        $message = 'Aggiornamento contenuto dal sito avviato. Il testo verrà estratto in background.';
         if ($request->header('X-Inertia')) {
             return Inertia::render('Admin/Companies/Show', [
                 'company' => $company->load(['documents', 'chatbots']),
                 'appUrl' => rtrim(config('app.url'), '/'),
                 'hasWebsiteContent' => ! empty($company->website_extracted_text),
                 'syncWebsiteUrl' => route('admin.companies.sync-website', $company),
-                'flash' => [$isError ? 'error' : 'success' => $message],
+                'flash' => ['success' => $message],
             ]);
         }
-        return redirect()->route('admin.companies.show', $company)->with($isError ? 'error' : 'success', $message);
+        return redirect()->route('admin.companies.show', $company)->with('success', $message);
     }
 
     public function destroy(Company $company): RedirectResponse
@@ -129,27 +129,4 @@ class CompanyController extends Controller
             ->with('success', 'Azienda eliminata.');
     }
 
-    /**
-     * Esegue lo scraper in modo sincrono così funziona anche senza queue worker (es. hosting condiviso).
-     */
-    private function dispatchScraper(Company $company): void
-    {
-        FetchCompanyWebsiteContent::dispatchSync($company);
-    }
-
-    /**
-     * Esegue lo scraper e restituisce [messaggio, true se errore].
-     */
-    private function runScraperAndGetMessage(Company $company): array
-    {
-        try {
-            $this->dispatchScraper($company);
-            return ['Contenuto dal sito estratto. Puoi usare il chatbot con i dati aggiornati.', false];
-        } catch (\Throwable $e) {
-            return [
-                'Errore durante l\'estrazione dal sito: ' . $e->getMessage() . '. Verifica che il server possa fare richieste HTTP in uscita.',
-                true,
-            ];
-        }
-    }
 }
