@@ -15,6 +15,8 @@ export default function CompaniesCreate() {
     address: '',
     mail_from_address: '',
     mail_from_name: '',
+    client_email: '',
+    client_name: '',
   });
 
   const submit = (e) => {
@@ -63,7 +65,7 @@ export default function CompaniesCreate() {
         </div>
         <div>
           <label htmlFor="email" className={labelClass}>
-            Email
+            Email azienda
           </label>
           <input
             id="email"
@@ -73,6 +75,42 @@ export default function CompaniesCreate() {
             className={inputClass}
           />
           {errors.email && <p className="mt-1.5 text-sm text-red-600">{errors.email}</p>}
+        </div>
+        <div className="border-t border-slate-200 pt-6">
+          <h2 className="mb-4 text-lg font-medium text-slate-900">Utente cliente</h2>
+          <p className="mb-4 text-sm text-slate-600">
+            Alla creazione dell&apos;azienda viene creato un utente di tipo cliente che potrà accedere alla dashboard.
+          </p>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="client_email" className={labelClass}>
+                Email cliente *
+              </label>
+              <input
+                id="client_email"
+                type="email"
+                value={data.client_email}
+                onChange={(e) => setData('client_email', e.target.value)}
+                className={inputClass}
+                placeholder="es. cliente@azienda.it"
+              />
+              {errors.client_email && <p className="mt-1.5 text-sm text-red-600">{errors.client_email}</p>}
+            </div>
+            <div>
+              <label htmlFor="client_name" className={labelClass}>
+                Nome cliente
+              </label>
+              <input
+                id="client_name"
+                type="text"
+                value={data.client_name}
+                onChange={(e) => setData('client_name', e.target.value)}
+                className={inputClass}
+                placeholder="come nome azienda se vuoto"
+              />
+              {errors.client_name && <p className="mt-1.5 text-sm text-red-600">{errors.client_name}</p>}
+            </div>
+          </div>
         </div>
         <div>
           <label htmlFor="website" className={labelClass}>

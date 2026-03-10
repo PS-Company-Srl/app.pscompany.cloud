@@ -5,8 +5,10 @@ use App\Http\Controllers\Admin\CompanyController;
 use App\Http\Controllers\Admin\ConversationController as AdminConversationController;
 use App\Http\Controllers\Admin\CompanyDocumentController;
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Customer\ChatbotController as CustomerChatbotController;
+use App\Http\Controllers\Customer\ConversationController as CustomerConversationController;
 use App\Http\Controllers\Customer\DashboardController as CustomerDashboardController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
@@ -35,6 +37,10 @@ Route::middleware('auth')->group(function () {
 
 Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/users', [UserController::class, 'index'])->name('users.index');
+    Route::get('/users/{user}/edit', [UserController::class, 'edit'])->name('users.edit');
+    Route::put('/users/{user}', [UserController::class, 'update'])->name('users.update');
+    Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('users.destroy');
     Route::post('companies/{company}/sync-website', [CompanyController::class, 'syncWebsite'])
         ->name('companies.sync-website');
     Route::post('companies/{company}/documents', [CompanyDocumentController::class, 'store'])
@@ -48,10 +54,20 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         ->name('companies.chatbots.conversations.show');
     Route::get('companies/{company}/recap-emails', [CompanyController::class, 'recapEmails'])
         ->name('companies.recap-emails.index');
+    Route::get('companies/{company}/users/create', [CompanyController::class, 'createUser'])
+        ->name('companies.users.create');
+    Route::post('companies/{company}/users', [CompanyController::class, 'storeUser'])
+        ->name('companies.users.store');
+    Route::delete('companies/{company}/users/{user}', [CompanyController::class, 'destroyUser'])
+        ->name('companies.users.destroy');
     Route::resource('companies', CompanyController::class)->names('companies');
 });
 
 Route::middleware(['auth', 'customer', 'company'])->prefix('dashboard')->name('customer.')->group(function () {
     Route::get('/', [CustomerDashboardController::class, 'index'])->name('dashboard');
+    Route::get('chatbots/{chatbot}/conversations', [CustomerConversationController::class, 'index'])
+        ->name('chatbots.conversations.index');
+    Route::get('chatbots/{chatbot}/conversations/{conversation}', [CustomerConversationController::class, 'show'])
+        ->name('chatbots.conversations.show');
     Route::resource('chatbots', CustomerChatbotController::class)->names('chatbots');
 });

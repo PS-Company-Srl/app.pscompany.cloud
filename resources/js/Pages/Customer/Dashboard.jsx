@@ -1,8 +1,14 @@
 import { Head, Link } from '@inertiajs/react';
 import CustomerLayout from '../../Layouts/CustomerLayout';
 
-export default function CustomerDashboard({ company }) {
+export default function CustomerDashboard({ company, stats = {} }) {
   const chatbots = company?.chatbots || [];
+  const {
+    total_conversations = 0,
+    conversations_this_month = 0,
+    conversations_last_7_days = 0,
+    chatbots_count = 0,
+  } = stats;
 
   return (
     <CustomerLayout>
@@ -18,8 +24,27 @@ export default function CustomerDashboard({ company }) {
       </div>
 
       <p className="mb-6 text-slate-600">
-        Benvenuto, <strong>{company?.name}</strong>. Qui puoi gestire i tuoi chatbot.
+        Benvenuto, <strong>{company?.name}</strong>. Qui puoi gestire i tuoi chatbot e consultare le conversazioni.
       </p>
+
+      <div className="mb-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-sm font-medium text-slate-500">Conversazioni totali</p>
+          <p className="mt-1 text-2xl font-semibold text-slate-900">{total_conversations}</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-sm font-medium text-slate-500">Questo mese</p>
+          <p className="mt-1 text-2xl font-semibold text-slate-900">{conversations_this_month}</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-sm font-medium text-slate-500">Ultimi 7 giorni</p>
+          <p className="mt-1 text-2xl font-semibold text-slate-900">{conversations_last_7_days}</p>
+        </div>
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+          <p className="text-sm font-medium text-slate-500">Chatbot attivi</p>
+          <p className="mt-1 text-2xl font-semibold text-slate-900">{chatbots_count}</p>
+        </div>
+      </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <h2 className="mb-4 text-lg font-medium text-slate-900">I tuoi chatbot</h2>
@@ -33,12 +58,20 @@ export default function CustomerDashboard({ company }) {
                 className="flex items-center justify-between rounded-xl border border-slate-100 bg-slate-50/50 px-4 py-3"
               >
                 <span className="font-medium text-slate-900">{bot.name}</span>
-                <Link
-                  href={`/dashboard/chatbots/${bot.id}/edit`}
-                  className="text-sm font-medium text-primary-600 hover:text-primary-700"
-                >
-                  Modifica
-                </Link>
+                <div className="flex items-center gap-3">
+                  <Link
+                    href={`/dashboard/chatbots/${bot.id}/conversations`}
+                    className="text-sm font-medium text-slate-600 hover:text-slate-900"
+                  >
+                    Conversazioni
+                  </Link>
+                  <Link
+                    href={`/dashboard/chatbots/${bot.id}/edit`}
+                    className="text-sm font-medium text-primary-600 hover:text-primary-700"
+                  >
+                    Modifica
+                  </Link>
+                </div>
               </li>
             ))}
           </ul>

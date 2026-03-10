@@ -45,6 +45,14 @@ export default function AdminLayout({ children }) {
               >
                 Aziende
               </Link>
+              <Link
+                href="/admin/users"
+                className={
+                  path.startsWith('/admin/users') ? navLinkActive : navLink
+                }
+              >
+                Utenti
+              </Link>
             </nav>
           </div>
           <div className="flex items-center gap-3">

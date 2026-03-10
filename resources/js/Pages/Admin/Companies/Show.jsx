@@ -124,6 +124,48 @@ export default function CompaniesShow({ company, appUrl, hasWebsiteContent, sync
         )}
       </div>
 
+      <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-medium text-slate-900">Utenti cliente</h2>
+          <Link
+            href={`/admin/companies/${company.id}/users/create`}
+            className="rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-primary-700"
+          >
+            Aggiungi utente cliente
+          </Link>
+        </div>
+        {(!company.users || company.users.length === 0) ? (
+          <p className="text-sm text-slate-500">
+            Nessun utente cliente. Aggiungine uno per consentire l’accesso alla dashboard cliente.
+          </p>
+        ) : (
+          <ul className="divide-y divide-slate-100">
+            {company.users.map((user) => (
+              <li
+                key={user.id}
+                className="flex items-center justify-between py-3 first:pt-0"
+              >
+                <div>
+                  <span className="font-medium text-slate-900">{user.name}</span>
+                  <span className="ml-2 text-sm text-slate-500">{user.email}</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (confirm('Rimuovere questo utente dall’azienda? Potrà essere riassegnato da Utenti.')) {
+                      router.delete(`/admin/companies/${company.id}/users/${user.id}`);
+                    }
+                  }}
+                  className="text-sm font-medium text-red-600 hover:text-red-700"
+                >
+                  Rimuovi da azienda
+                </button>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
       {company.website && (
         <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="mb-4 text-lg font-medium text-slate-900">Contenuto dal sito web</h2>

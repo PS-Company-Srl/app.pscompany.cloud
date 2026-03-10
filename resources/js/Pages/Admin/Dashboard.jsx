@@ -29,6 +29,12 @@ export default function AdminDashboard({ stats }) {
           href="/admin/companies"
           linkLabel="Gestisci"
         />
+        <StatCard
+          label="Utenti"
+          value={stats.users_count}
+          href="/admin/users"
+          linkLabel="Elenco"
+        />
       </div>
     </AdminLayout>
   );
