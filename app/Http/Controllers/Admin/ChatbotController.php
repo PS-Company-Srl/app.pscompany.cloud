@@ -45,9 +45,13 @@ class ChatbotController extends Controller
             'widget_position' => 'nullable|string|in:bottom-right,bottom-left',
             'widget_welcome_message' => 'nullable|string|max:2000',
             'widget_auto_open_after_seconds' => 'nullable|integer|min:0|max:300',
+            'recap_email_enabled' => 'nullable|boolean',
+            'recap_email_delay_minutes' => 'nullable|integer|min:5|max:1440',
         ]);
 
         $validated['company_id'] = $company->id;
+        $validated['recap_email_enabled'] = $request->boolean('recap_email_enabled');
+        $validated['recap_email_delay_minutes'] = (int) ($validated['recap_email_delay_minutes'] ?? 30);
         if (empty($validated['custom_goal']) || $validated['goal_type'] !== 'custom') {
             $validated['custom_goal'] = null;
         }
@@ -97,6 +101,8 @@ class ChatbotController extends Controller
             'widget_position' => 'nullable|string|in:bottom-right,bottom-left',
             'widget_welcome_message' => 'nullable|string|max:2000',
             'widget_auto_open_after_seconds' => 'nullable|integer|min:0|max:300',
+            'recap_email_enabled' => 'nullable|boolean',
+            'recap_email_delay_minutes' => 'nullable|integer|min:5|max:1440',
             'remove_icon' => 'nullable|boolean',
         ]);
 
@@ -126,6 +132,8 @@ class ChatbotController extends Controller
             unset($validated['openai_api_key']);
         }
 
+        $validated['recap_email_enabled'] = $request->boolean('recap_email_enabled');
+        $validated['recap_email_delay_minutes'] = (int) ($validated['recap_email_delay_minutes'] ?? 30);
         $chatbot->update($validated);
 
         return redirect()->route('admin.companies.chatbots.index', $company)

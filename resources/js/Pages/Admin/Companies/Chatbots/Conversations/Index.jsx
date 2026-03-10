@@ -59,6 +59,12 @@ export default function AdminConversationsIndex({ company, chatbot, conversation
                   Session ID
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">
+                  Nome
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">
+                  Cognome
+                </th>
+                <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">
                   Email
                 </th>
                 <th className="px-4 py-3 text-left text-xs font-medium uppercase text-slate-500">
@@ -80,6 +86,12 @@ export default function AdminConversationsIndex({ company, chatbot, conversation
                   </td>
                   <td className="px-4 py-3 text-sm font-mono text-slate-600 truncate max-w-[180px]" title={conv.session_id}>
                     {conv.session_id || '–'}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-slate-600">
+                    {conv.first_name || '–'}
+                  </td>
+                  <td className="px-4 py-3 text-sm text-slate-600">
+                    {conv.last_name || '–'}
                   </td>
                   <td className="px-4 py-3 text-sm text-slate-600">
                     {conv.email || '–'}

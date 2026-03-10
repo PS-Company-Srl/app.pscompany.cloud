@@ -46,7 +46,7 @@ export default function AdminConversationsShow({ company, chatbot, conversation 
       </div>
 
       <div className="mb-6 rounded-xl border border-slate-200 bg-white p-4">
-        <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4 text-sm">
+        <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 text-sm">
           <div>
             <dt className="font-medium text-slate-500">Iniziata</dt>
             <dd className="text-slate-900">{formatDate(conversation.started_at)}</dd>
@@ -56,6 +56,14 @@ export default function AdminConversationsShow({ company, chatbot, conversation 
             <dd className="font-mono text-slate-700 truncate" title={conversation.session_id}>
               {conversation.session_id || '–'}
             </dd>
+          </div>
+          <div>
+            <dt className="font-medium text-slate-500">Nome</dt>
+            <dd className="text-slate-900">{conversation.first_name || '–'}</dd>
+          </div>
+          <div>
+            <dt className="font-medium text-slate-500">Cognome</dt>
+            <dd className="text-slate-900">{conversation.last_name || '–'}</dd>
           </div>
           <div>
             <dt className="font-medium text-slate-500">Email</dt>

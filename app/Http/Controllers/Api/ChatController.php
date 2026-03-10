@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendConversationRecapEmail;
 use App\Models\Conversation;
 use App\Services\ChatbotService;
 use Illuminate\Http\JsonResponse;
@@ -71,6 +72,11 @@ class ChatController extends Controller
         $reply = $this->chatbotService->reply($chatbot, $userMessage, $history);
 
         $conversation->appendMessages($userMessage, $reply);
+
+        if ($chatbot->recap_email_enabled && ! empty($conversation->email)) {
+            $delayMinutes = (int) ($chatbot->recap_email_delay_minutes ?: 30);
+            SendConversationRecapEmail::dispatch($conversation)->delay(now()->addMinutes($delayMinutes));
+        }
 
         return response()->json([
             'reply' => $reply,

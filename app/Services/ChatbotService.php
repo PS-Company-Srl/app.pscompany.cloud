@@ -66,7 +66,7 @@ class ChatbotService
 
         switch ($chatbot->goal_type) {
             case Chatbot::GOAL_LEAD_CAPTURE:
-                $base .= "OBIETTIVO: Oltre ad assistere, cerca di ottenere in modo naturale email e numero di telefono dell'utente quando è pertinente (es. per inviare informazioni, richiamare). Non essere insistente; chiedi con cortesia quando il contesto lo permette.\n\n";
+                $base .= "OBIETTIVO: Oltre ad assistere, cerca di ottenere in modo naturale nome e cognome, email e numero di telefono dell'utente quando è pertinente (es. per inviare informazioni, richiamare). Chiedi anche nome e cognome oltre a email e telefono. Non essere insistente; chiedi con cortesia quando il contesto lo permette.\n\n";
                 break;
             case Chatbot::GOAL_CUSTOM:
                 if (! empty(trim((string) $chatbot->custom_goal))) {

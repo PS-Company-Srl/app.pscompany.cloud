@@ -14,7 +14,10 @@ class Conversation extends Model
         'started_at',
         'email',
         'phone',
+        'first_name',
+        'last_name',
         'message_history',
+        'recap_email_sent_at',
     ];
 
     protected function casts(): array
@@ -22,6 +25,7 @@ class Conversation extends Model
         return [
             'started_at' => 'datetime',
             'message_history' => 'array',
+            'recap_email_sent_at' => 'datetime',
         ];
     }
 
@@ -49,7 +53,7 @@ class Conversation extends Model
     }
 
     /**
-     * Estrae email e/o telefono dal testo e aggiorna la conversazione se trovati.
+     * Estrae email, telefono e nome/cognome dal testo e aggiorna la conversazione se trovati.
      */
     public function captureLeadFromText(string $text): void
     {
@@ -69,8 +73,64 @@ class Conversation extends Model
             }
         }
 
+        if (empty($this->first_name) || empty($this->last_name)) {
+            $nameUpdated = $this->extractNameFromText($text);
+            if ($nameUpdated) {
+                $updated = true;
+            }
+        }
+
         if ($updated) {
             $this->save();
         }
+    }
+
+    /**
+     * Estrae nome e cognome da frasi comuni (es. "Mi chiamo Mario Rossi", "Sono Mario Rossi").
+     */
+    private function extractNameFromText(string $text): bool
+    {
+        $text = trim($text);
+        if (strlen($text) > 200) {
+            $text = substr($text, 0, 200);
+        }
+
+        // "mi chiamo Nome Cognome" / "sono Nome Cognome" / "il mio nome è Nome Cognome"
+        if (preg_match('/\b(?:mi chiamo|sono|il mio nome è)\s+([A-Za-zÀ-ÿ\'\-]+)(?:\s+([A-Za-zÀ-ÿ\'\-]+))?/ui', $text, $m)) {
+            $first = trim($m[1] ?? '');
+            $second = trim($m[2] ?? '');
+            if ($first !== '') {
+                if (empty($this->first_name)) {
+                    $this->first_name = $first;
+                }
+                if ($second !== '' && empty($this->last_name)) {
+                    $this->last_name = $second;
+                }
+                return true;
+            }
+        }
+
+        // "nome: Mario" e "cognome: Rossi" (o "nome e cognome: Mario Rossi")
+        if (preg_match('/\bnome\s*[:\s]+\s*([A-Za-zÀ-ÿ\'\-]+)/ui', $text, $m) && empty($this->first_name)) {
+            $this->first_name = trim($m[1]);
+            return true;
+        }
+        if (preg_match('/\bcognome\s*[:\s]+\s*([A-Za-zÀ-ÿ\'\-]+)/ui', $text, $m) && empty($this->last_name)) {
+            $this->last_name = trim($m[1]);
+            return true;
+        }
+
+        // Messaggio di sole due parole (es. "Mario Rossi") interpretate come nome e cognome
+        if (preg_match('/^([A-Za-zÀ-ÿ\'\-]+)\s+([A-Za-zÀ-ÿ\'\-]+)\s*$/u', $text, $m)) {
+            if (empty($this->first_name)) {
+                $this->first_name = trim($m[1]);
+            }
+            if (empty($this->last_name)) {
+                $this->last_name = trim($m[2]);
+            }
+            return true;
+        }
+
+        return false;
     }
 }

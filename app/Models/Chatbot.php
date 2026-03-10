@@ -23,6 +23,8 @@ class Chatbot extends Model
         'widget_icon',
         'widget_welcome_message',
         'widget_auto_open_after_seconds',
+        'recap_email_enabled',
+        'recap_email_delay_minutes',
     ];
 
     public const GOAL_ASSISTANT = 'assistant';

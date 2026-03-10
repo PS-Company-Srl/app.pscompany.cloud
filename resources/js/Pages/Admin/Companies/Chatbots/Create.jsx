@@ -16,6 +16,8 @@ export default function AdminCompaniesChatbotsCreate({ company, goalTypes }) {
     widget_position: 'bottom-right',
     widget_welcome_message: '',
     widget_auto_open_after_seconds: 20,
+    recap_email_enabled: false,
+    recap_email_delay_minutes: 30,
   });
 
   return (
@@ -186,6 +188,37 @@ export default function AdminCompaniesChatbotsCreate({ company, goalTypes }) {
               </div>
             </div>
           </div>
+        </div>
+
+        <div className="border-t border-slate-200 pt-6">
+          <h2 className="mb-4 text-lg font-medium text-slate-900">Email recap conversazione</h2>
+          <p className="mb-4 text-sm text-slate-600">
+            Dopo un periodo di inattività dalla fine della conversazione, invia al cliente una mail con il riepilogo della chat e i dati inseriti (solo se l&apos;utente ha fornito un&apos;email).
+          </p>
+          <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-700">
+            <input
+              type="checkbox"
+              checked={data.recap_email_enabled}
+              onChange={(e) => setData('recap_email_enabled', e.target.checked)}
+              className="rounded border-slate-300 text-primary-600"
+            />
+            Invia email di recap al cliente
+          </label>
+          {data.recap_email_enabled && (
+            <div className="mt-4">
+              <label htmlFor="recap_email_delay_minutes" className={labelClass}>Minuti dopo la fine della conversazione</label>
+              <input
+                id="recap_email_delay_minutes"
+                type="number"
+                min={5}
+                max={1440}
+                value={data.recap_email_delay_minutes}
+                onChange={(e) => setData('recap_email_delay_minutes', e.target.value ? parseInt(e.target.value, 10) : 30)}
+                className={inputClass}
+              />
+              <p className="mt-1 text-xs text-slate-500">Dopo quanti minuti dall&apos;ultimo messaggio inviare la mail (5–1440, default 30).</p>
+            </div>
+          )}
         </div>
 
         <div className="flex gap-3 border-t border-slate-100 pt-6">
