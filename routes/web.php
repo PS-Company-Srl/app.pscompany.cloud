@@ -46,6 +46,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         ->name('companies.chatbots.conversations.index');
     Route::get('companies/{company}/chatbots/{chatbot}/conversations/{conversation}', [AdminConversationController::class, 'show'])
         ->name('companies.chatbots.conversations.show');
+    Route::get('companies/{company}/recap-emails', [CompanyController::class, 'recapEmails'])
+        ->name('companies.recap-emails.index');
     Route::resource('companies', CompanyController::class)->names('companies');
 });
 

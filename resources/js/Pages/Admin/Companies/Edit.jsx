@@ -13,6 +13,8 @@ export default function CompaniesEdit({ company }) {
     website: company.website ?? '',
     phone: company.phone ?? '',
     address: company.address ?? '',
+    mail_from_address: company.mail_from_address ?? '',
+    mail_from_name: company.mail_from_name ?? '',
   });
 
   const submit = (e) => {
@@ -109,6 +111,39 @@ export default function CompaniesEdit({ company }) {
             className={inputClass}
           />
           {errors.address && <p className="mt-1.5 text-sm text-red-600">{errors.address}</p>}
+        </div>
+
+        <div className="border-t border-slate-200 pt-6">
+          <h2 className="mb-4 text-lg font-medium text-slate-900">Email di invio (notifiche e recap)</h2>
+          <p className="mb-4 text-sm text-slate-600">
+            Indirizzo e nome mittente usati per le mail inviate dall&apos;azienda (es. recap conversazione). Se vuoti viene usato il valore predefinito del sistema.
+          </p>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="mail_from_address" className={labelClass}>Email mittente</label>
+              <input
+                id="mail_from_address"
+                type="email"
+                value={data.mail_from_address}
+                onChange={(e) => setData('mail_from_address', e.target.value)}
+                className={inputClass}
+                placeholder="es. noreply@azienda.it"
+              />
+              {errors.mail_from_address && <p className="mt-1.5 text-sm text-red-600">{errors.mail_from_address}</p>}
+            </div>
+            <div>
+              <label htmlFor="mail_from_name" className={labelClass}>Nome mittente</label>
+              <input
+                id="mail_from_name"
+                type="text"
+                value={data.mail_from_name}
+                onChange={(e) => setData('mail_from_name', e.target.value)}
+                className={inputClass}
+                placeholder="es. Assistente Acme"
+              />
+              {errors.mail_from_name && <p className="mt-1.5 text-sm text-red-600">{errors.mail_from_name}</p>}
+            </div>
+          </div>
         </div>
 
         <p className="text-sm text-slate-500">

@@ -13,6 +13,8 @@ export default function CompaniesCreate() {
     website: '',
     phone: '',
     address: '',
+    mail_from_address: '',
+    mail_from_name: '',
   });
 
   const submit = (e) => {
@@ -110,6 +112,36 @@ export default function CompaniesCreate() {
             className={inputClass}
           />
           {errors.address && <p className="mt-1.5 text-sm text-red-600">{errors.address}</p>}
+        </div>
+        <div className="border-t border-slate-200 pt-6">
+          <h2 className="mb-4 text-lg font-medium text-slate-900">Email di invio (opzionale)</h2>
+          <p className="mb-4 text-sm text-slate-600">
+            Indirizzo e nome mittente per le mail (es. recap conversazione). Se vuoti si usa il valore predefinito.
+          </p>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="mail_from_address" className={labelClass}>Email mittente</label>
+              <input
+                id="mail_from_address"
+                type="email"
+                value={data.mail_from_address}
+                onChange={(e) => setData('mail_from_address', e.target.value)}
+                className={inputClass}
+                placeholder="es. noreply@azienda.it"
+              />
+            </div>
+            <div>
+              <label htmlFor="mail_from_name" className={labelClass}>Nome mittente</label>
+              <input
+                id="mail_from_name"
+                type="text"
+                value={data.mail_from_name}
+                onChange={(e) => setData('mail_from_name', e.target.value)}
+                className={inputClass}
+                placeholder="es. Assistente Acme"
+              />
+            </div>
+          </div>
         </div>
         <div className="flex gap-3 border-t border-slate-100 pt-6">
           <button

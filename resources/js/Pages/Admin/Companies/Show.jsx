@@ -56,12 +56,20 @@ export default function CompaniesShow({ company, appUrl, hasWebsiteContent, sync
       <div className="mb-6 rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
         <div className="mb-4 flex items-center justify-between">
           <h2 className="text-lg font-medium text-slate-900">Chatbot</h2>
-          <Link
-            href={`/admin/companies/${company.id}/chatbots`}
-            className="rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-primary-700"
-          >
-            Gestisci chatbot
-          </Link>
+          <div className="flex gap-2">
+            <Link
+              href={`/admin/companies/${company.id}/recap-emails`}
+              className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 shadow-sm hover:bg-slate-50"
+            >
+              Mail recap inviate
+            </Link>
+            <Link
+              href={`/admin/companies/${company.id}/chatbots`}
+              className="rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-primary-700"
+            >
+              Gestisci chatbot
+            </Link>
+          </div>
         </div>
         {chatbots.length === 0 ? (
           <p className="text-sm text-slate-500">Nessun chatbot. Aggiungine uno dalla gestione chatbot.</p>

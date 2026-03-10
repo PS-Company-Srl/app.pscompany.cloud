@@ -16,6 +16,8 @@ class Company extends Model
         'website_extracted_text',
         'phone',
         'address',
+        'mail_from_address',
+        'mail_from_name',
     ];
 
     protected static function booted(): void

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Jobs\FetchCompanyWebsiteContent;
 use App\Models\Company;
+use App\Models\Conversation;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -38,6 +39,8 @@ class CompanyController extends Controller
             'website' => 'nullable|string|max:500|url',
             'phone' => 'nullable|string|max:50',
             'address' => 'nullable|string',
+            'mail_from_address' => 'nullable|email',
+            'mail_from_name' => 'nullable|string|max:255',
         ]);
 
         $company = Company::create($validated);
@@ -70,6 +73,22 @@ class CompanyController extends Controller
         ]);
     }
 
+    public function recapEmails(Company $company): InertiaResponse
+    {
+        $conversations = Conversation::query()
+            ->whereHas('chatbot', fn ($q) => $q->where('company_id', $company->id))
+            ->whereNotNull('recap_email_sent_at')
+            ->with('chatbot:id,name,company_id')
+            ->orderByDesc('recap_email_sent_at')
+            ->paginate(20)
+            ->withQueryString();
+
+        return Inertia::render('Admin/Companies/RecapEmails/Index', [
+            'company' => $company,
+            'conversations' => $conversations,
+        ]);
+    }
+
     public function update(Request $request, Company $company): RedirectResponse
     {
         $validated = $request->validate([
@@ -79,6 +98,8 @@ class CompanyController extends Controller
             'website' => 'nullable|string|max:500|url',
             'phone' => 'nullable|string|max:50',
             'address' => 'nullable|string',
+            'mail_from_address' => 'nullable|email',
+            'mail_from_name' => 'nullable|string|max:255',
         ]);
 
         $websiteChanged = ($validated['website'] ?? null) !== $company->website;
