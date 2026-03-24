@@ -1,59 +1,137 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# PSCompany Cloud — AI Chatbot SaaS Platform
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Piattaforma SaaS per la creazione e gestione di chatbot AI personalizzati. Le aziende possono creare chatbot alimentati da OpenAI, addestrarli con contenuti del proprio sito web e documenti aziendali, e integrarli su qualsiasi sito tramite widget JavaScript.
 
-## About Laravel
+## Stack tecnologico
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+| Layer | Tecnologia |
+|-------|-----------|
+| Backend | Laravel 12, PHP 8.2+ |
+| Frontend | React 19, Inertia.js 2, Tailwind CSS 4 |
+| Build | Vite 7 |
+| Database | SQLite (dev) / MySQL / PostgreSQL |
+| AI | OpenAI GPT-4o-mini |
+| Queue | Laravel Queue (driver: database) |
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Funzionalità principali
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+- **Gestione aziende** — CRUD completo, profilo con dati di contatto e configurazione mail
+- **Chatbot per azienda** — Ogni azienda può avere più chatbot con obiettivi diversi (assistente, acquisizione lead, personalizzato)
+- **Addestramento automatico** — Crawler del sito web aziendale (fino a 50 pagine) + estrazione testo da documenti PDF/Word
+- **Widget embeddable** — `widget.js` da includere su qualsiasi sito, autenticato tramite API key
+- **CRM minimalista** — Estrazione automatica di email, telefono e nome dai messaggi chat
+- **Recap email** — Invio riepilogo conversazione all'utente con ritardo configurabile
+- **Ruoli** — Admin (accesso completo) e Customer (accesso alla propria azienda)
 
-## Learning Laravel
+## Struttura del progetto
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework. You can also check out [Laravel Learn](https://laravel.com/learn), where you will be guided through building a modern Laravel application.
+```
+app/
+  Http/
+    Controllers/
+      Admin/         # Pannello admin (aziende, utenti, chatbot, conversazioni)
+      Customer/      # Pannello cliente (dashboard, chatbot, conversazioni)
+      Api/           # Endpoint pubblici per il widget
+    Middleware/      # Auth per ruoli, validazione API key
+  Models/            # User, Company, Chatbot, Conversation, Message, CompanyDocument
+  Services/
+    ChatbotService.php   # Integrazione OpenAI, costruzione contesto
+  Jobs/              # FetchCompanyWebsiteContent, ProcessCompanyDocument, SendConversationRecapEmail
+  Mail/
+    ConversationRecapMail.php
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+resources/js/
+  Pages/Admin/       # Pagine React admin
+  Pages/Customer/    # Pagine React cliente
+  Layouts/           # Layout admin e customer
 
-## Laravel Sponsors
+public/
+  widget.js          # Widget embeddable per siti esterni
+  widget-test.html   # Pagina di test integrazione widget
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+routes/
+  web.php            # Rotte web (admin, customer, auth)
+  api.php            # API pubblica per il widget
+```
 
-### Premium Partners
+## Installazione
 
-- **[Vehikl](https://vehikl.com)**
-- **[Tighten Co.](https://tighten.co)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Redberry](https://redberry.international/laravel-development)**
-- **[Active Logic](https://activelogic.com)**
+```bash
+# Clona il repo e installa le dipendenze
+composer install
+npm install
 
-## Contributing
+# Configura l'ambiente
+cp .env.example .env
+php artisan key:generate
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+# Esegui le migration e i seeder
+php artisan migrate --seed
 
-## Code of Conduct
+# Build del frontend
+npm run build
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Variabili d'ambiente principali
 
-## Security Vulnerabilities
+```env
+APP_URL=http://localhost
+DB_CONNECTION=sqlite          # oppure mysql/pgsql in produzione
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+OPENAI_API_KEY=sk-...         # Fallback globale per i chatbot
 
-## License
+MAIL_MAILER=smtp
+MAIL_HOST=...
+MAIL_PORT=587
+MAIL_USERNAME=...
+MAIL_PASSWORD=...
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Sviluppo
+
+```bash
+# Avvia tutto in parallelo (server, queue, logs, vite)
+composer dev
+
+# Solo frontend
+npm run dev
+```
+
+## Produzione
+
+In produzione è necessario un worker per la coda (scraping siti, estrazione documenti, email):
+
+```bash
+# Cron ogni minuto
+* * * * * cd /path/to/app && php artisan schedule:run >> /dev/null 2>&1
+
+# Oppure worker persistente
+php artisan queue:work --stop-when-empty
+```
+
+## API Widget
+
+Il widget si integra su siti esterni tramite API key. Endpoint disponibili:
+
+| Metodo | Endpoint | Descrizione |
+|--------|----------|-------------|
+| `POST` | `/api/chatbot/config` | Configurazione widget (colori, messaggio benvenuto) |
+| `POST` | `/api/chatbot/message` | Invia messaggio e riceve risposta AI |
+
+Header richiesto: `X-API-Key: {api_key}`
+
+## Database
+
+Tabelle principali: `users`, `roles`, `companies`, `company_documents`, `chatbots`, `conversations`, `messages`
+
+Credenziali seed predefinite:
+- **Admin:** `admin@example.com` / `password`
+- **Customer:** `customer@example.com` / `password`
+
+## Test
+
+```bash
+composer test
+# oppure
+php artisan test
+```

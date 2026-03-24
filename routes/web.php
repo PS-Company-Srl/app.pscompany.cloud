@@ -47,6 +47,8 @@ Route::middleware(['auth', 'admin'])->prefix('admin')->name('admin.')->group(fun
         ->name('companies.documents.store');
     Route::delete('companies/{company}/documents/{document}', [CompanyDocumentController::class, 'destroy'])
         ->name('companies.documents.destroy');
+    Route::get('companies/{company}/chatbots/bertoli-configuration', [AdminChatbotController::class, 'bertoliConfiguration'])
+        ->name('companies.chatbots.bertoli-configuration');
     Route::resource('companies.chatbots', AdminChatbotController::class)->names('companies.chatbots')->scoped();
     Route::get('companies/{company}/chatbots/{chatbot}/conversations', [AdminConversationController::class, 'index'])
         ->name('companies.chatbots.conversations.index');

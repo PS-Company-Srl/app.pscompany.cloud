@@ -18,6 +18,7 @@ class Chatbot extends Model
         'openai_api_key',
         'goal_type',
         'custom_goal',
+        'bertoli_configuration_enabled',
         'widget_primary_color',
         'widget_position',
         'widget_icon',

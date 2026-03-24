@@ -30,6 +30,7 @@ class ChatbotController extends Controller
         return Inertia::render('Admin/Companies/Chatbots/Create', [
             'company' => $company,
             'goalTypes' => Chatbot::GOAL_TYPES,
+            'bertoliInfoUrl' => route('admin.companies.chatbots.bertoli-configuration', $company),
         ]);
     }
 
@@ -40,6 +41,7 @@ class ChatbotController extends Controller
             'slug' => 'nullable|string|max:100',
             'goal_type' => 'required|string|in:assistant,lead_capture,custom',
             'custom_goal' => 'nullable|string|max:2000',
+            'bertoli_configuration_enabled' => 'nullable|boolean',
             'openai_api_key' => 'nullable|string|max:255',
             'widget_primary_color' => 'nullable|string|max:20|regex:/^#[0-9A-Fa-f]{6}$/',
             'widget_position' => 'nullable|string|in:bottom-right,bottom-left',
@@ -50,6 +52,7 @@ class ChatbotController extends Controller
         ]);
 
         $validated['company_id'] = $company->id;
+        $validated['bertoli_configuration_enabled'] = $request->boolean('bertoli_configuration_enabled');
         $validated['recap_email_enabled'] = $request->boolean('recap_email_enabled');
         $validated['recap_email_delay_minutes'] = (int) ($validated['recap_email_delay_minutes'] ?? 30);
         if (empty($validated['custom_goal']) || $validated['goal_type'] !== 'custom') {
@@ -81,6 +84,7 @@ class ChatbotController extends Controller
             ]),
             'goalTypes' => Chatbot::GOAL_TYPES,
             'appUrl' => rtrim(config('app.url'), '/'),
+            'bertoliInfoUrl' => route('admin.companies.chatbots.bertoli-configuration', $company),
         ]);
     }
 
@@ -95,6 +99,7 @@ class ChatbotController extends Controller
             'slug' => 'nullable|string|max:100',
             'goal_type' => 'required|string|in:assistant,lead_capture,custom',
             'custom_goal' => 'nullable|string|max:2000',
+            'bertoli_configuration_enabled' => 'nullable|boolean',
             'openai_api_key' => 'nullable|string|max:255',
             'openai_api_key_clear' => 'nullable|boolean',
             'widget_primary_color' => 'nullable|string|max:20|regex:/^#[0-9A-Fa-f]{6}$/',
@@ -132,6 +137,7 @@ class ChatbotController extends Controller
             unset($validated['openai_api_key']);
         }
 
+        $validated['bertoli_configuration_enabled'] = $request->boolean('bertoli_configuration_enabled');
         $validated['recap_email_enabled'] = $request->boolean('recap_email_enabled');
         $validated['recap_email_delay_minutes'] = (int) ($validated['recap_email_delay_minutes'] ?? 30);
         $chatbot->update($validated);
@@ -152,5 +158,12 @@ class ChatbotController extends Controller
 
         return redirect()->route('admin.companies.chatbots.index', $company)
             ->with('success', 'Chatbot eliminato.');
+    }
+
+    public function bertoliConfiguration(Company $company): Response
+    {
+        return Inertia::render('Admin/Companies/Chatbots/BertoliConfiguration', [
+            'company' => $company,
+        ]);
     }
 }

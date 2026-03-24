@@ -5,12 +5,13 @@ const inputClass =
   'mt-1.5 block w-full rounded-xl border border-slate-300 px-4 py-2.5 text-slate-900 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-500/20';
 const labelClass = 'block text-sm font-medium text-slate-700';
 
-export default function AdminCompaniesChatbotsCreate({ company, goalTypes }) {
+export default function AdminCompaniesChatbotsCreate({ company, goalTypes, bertoliInfoUrl }) {
   const { data, setData, post, processing, errors } = useForm({
     name: '',
     slug: '',
     goal_type: 'assistant',
     custom_goal: '',
+    bertoli_configuration_enabled: false,
     openai_api_key: '',
     widget_primary_color: '#4f46e5',
     widget_position: 'bottom-right',
@@ -96,6 +97,29 @@ export default function AdminCompaniesChatbotsCreate({ company, goalTypes }) {
             {errors.custom_goal && <p className="mt-1.5 text-sm text-red-600">{errors.custom_goal}</p>}
           </div>
         )}
+
+        <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+          <label className="flex cursor-pointer items-start gap-3 text-sm text-slate-700">
+            <input
+              type="checkbox"
+              checked={data.bertoli_configuration_enabled}
+              onChange={(e) => setData('bertoli_configuration_enabled', e.target.checked)}
+              className="mt-0.5 rounded border-slate-300 text-primary-600"
+            />
+            <span>
+              <span className="block font-medium text-slate-900">
+                Attiva anche la &quot;Configurazione Bertoli&quot;
+              </span>
+              <span className="mt-1 block text-xs text-slate-600">
+                Se attiva si somma agli obiettivi del chatbot già previsti.{' '}
+                <Link href={bertoliInfoUrl} className="text-primary-700 underline hover:text-primary-800">
+                  Vedi dettagli configurazione
+                </Link>
+                .
+              </span>
+            </span>
+          </label>
+        </div>
 
         <div className="border-t border-slate-200 pt-6">
           <h2 className="mb-4 text-lg font-medium text-slate-900">OpenAI</h2>

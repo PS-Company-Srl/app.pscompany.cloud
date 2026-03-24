@@ -68,6 +68,11 @@ export default function AdminCompaniesChatbotsIndex({ company, chatbots, appUrl 
                     <p className="text-sm text-slate-500">
                       {GOAL_LABELS[bot.goal_type] || bot.goal_type}
                     </p>
+                    {bot.bertoli_configuration_enabled && (
+                      <p className="mt-1 text-xs font-medium text-primary-700">
+                        Configurazione Bertoli attiva
+                      </p>
+                    )}
                   </div>
                   <div className="flex gap-2">
                     <Link

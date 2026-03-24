@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Demo Chatbot - Configurazione Bertoli</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --line: #e2e8f0;
+      --primary: #0ea5e9;
+      --primary-hover: #0284c7;
+      --ok: #166534;
+      --ok-bg: #dcfce7;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      line-height: 1.4;
+    }
+    .container {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 24px 16px 96px;
+    }
+    .header {
+      margin-bottom: 16px;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+    }
+    .subtitle {
+      margin: 0;
+      color: var(--muted);
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 16px;
+      margin-top: 20px;
+    }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03);
+    }
+    .span-12 { grid-column: span 12; }
+    .span-7 { grid-column: span 7; }
+    .span-5 { grid-column: span 5; }
+    @media (max-width: 900px) {
+      .span-7, .span-5 { grid-column: span 12; }
+    }
+    h2 {
+      margin: 0 0 12px;
+      font-size: 18px;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin: 12px 0 6px;
+      font-size: 14px;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      font: inherit;
+      color: var(--text);
+      background: #fff;
+    }
+    textarea { min-height: 84px; resize: vertical; }
+    .row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    button, .btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 10px 12px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    button:hover, .btn:hover { background: var(--primary-hover); }
+    .btn-light {
+      background: #f1f5f9;
+      color: #0f172a;
+      border: 1px solid var(--line);
+    }
+    .btn-light:hover { background: #e2e8f0; }
+    ul {
+      margin: 0;
+      padding-left: 18px;
+      color: #1e293b;
+    }
+    li { margin: 8px 0; }
+    .small { font-size: 13px; color: var(--muted); }
+    .success {
+      display: none;
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: var(--ok-bg);
+      color: var(--ok);
+      font-size: 14px;
+    }
+    code {
+      background: #f1f5f9;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      padding: 1px 6px;
+      font-size: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>Demo cliente - Chatbot Bertoli</h1>
+      <p class="subtitle">
+        Pagina di test per mostrare la <strong>Configurazione Bertoli</strong> (lead capture, pronta consegna, post-vendita, showroom).
+      </p>
+    </div>
+
+    <div class="grid">
+      <section class="card span-7">
+        <h2>1) Carica il widget</h2>
+        <label for="apiUrl">URL app</label>
+        <input type="text" id="apiUrl" placeholder="http://localhost:8000">
+
+        <label for="apiKey">API Key chatbot Bertoli</label>
+        <input type="text" id="apiKey" placeholder="ck_...">
+        <p class="small">Suggerimento: puoi passare <code>?url=...</code> e <code>?key=...</code> in querystring.</p>
+
+        <div class="row">
+          <button type="button" id="loadBtn">Carica widget</button>
+          <button type="button" id="reloadBtn" class="btn-light">Ricarica widget</button>
+        </div>
+        <p id="loadOk" class="success">Widget caricato. Apri la chat in basso a destra e avvia i test.</p>
+      </section>
+
+      <section class="card span-5">
+        <h2>2) Checklist demo rapida</h2>
+        <ul>
+          <li>Propone prima le occasioni Bertoli su richieste pronta consegna.</li>
+          <li>Quando mancano occasioni, usa partner/fournitori censiti.</li>
+          <li>Invita sempre a fissare appuntamento in showroom.</li>
+          <li>Raccoglie nome, cognome, telefono, email.</li>
+          <li>Su post-vendita chiede problema + contratto/codice contratto.</li>
+          <li>Comunica presa in carico post-vendita e inoltro dedicato.</li>
+        </ul>
+      </section>
+
+      <section class="card span-12">
+        <h2>3) Test guidati (clicca per copiare il messaggio)</h2>
+        <p class="small">Ogni bottone copia un messaggio pronto da incollare in chat. Dopo il click fai CMD+V nella conversazione.</p>
+        <label for="scenarioText">Messaggio scenario (fallback manuale)</label>
+        <textarea id="scenarioText" readonly placeholder="Qui apparirà il testo del test selezionato..."></textarea>
+        <div class="row">
+          <button type="button" id="copyFromAreaBtn" class="btn-light">Copia dal box</button>
+        </div>
+        <div class="row">
+          <button type="button" class="btn-light scenario-btn" data-msg="Sono alla ricerca di un tavolo tondo massimo diametro 140/150 cm. Avete qualcosa in pronta consegna?">
+            Pronta consegna tavolo 140/150
+          </button>
+          <button type="button" class="btn-light scenario-btn" data-msg="Cerco una cucina moderna con penisola, fascia medio-alta. Potete propormi qualche soluzione?">
+            Ricerca cucina moderna
+          </button>
+          <button type="button" class="btn-light scenario-btn" data-msg="Ho un problema con l'anta della cucina installata. Si sta disallineando. Contratto intestato a Mario Rossi, codice C-12873.">
+            Post-vendita con contratto
+          </button>
+          <button type="button" class="btn-light scenario-btn" data-msg="Avete in showroom un divano Ditre Italia? In quale sede posso vederlo tra Modena e Correggio?">
+            Prodotto in sala mostra
+          </button>
+          <button type="button" class="btn-light scenario-btn" data-msg="Preferisco fissare un appuntamento. Sono disponibile sabato pomeriggio.">
+            Richiesta appuntamento
+          </button>
+        </div>
+        <p id="copyOk" class="success">Messaggio copiato negli appunti.</p>
+      </section>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var apiUrlEl = document.getElementById('apiUrl');
+      var apiKeyEl = document.getElementById('apiKey');
+      var scenarioTextEl = document.getElementById('scenarioText');
+      var loadOk = document.getElementById('loadOk');
+      var copyOk = document.getElementById('copyOk');
+
+      var params = new URLSearchParams(window.location.search);
+      var qsUrl = params.get('url');
+      var qsKey = params.get('key');
+      apiUrlEl.value = qsUrl || window.location.origin;
+      if (qsKey) apiKeyEl.value = qsKey;
+
+      function showOk(el) {
+        el.style.display = 'block';
+        window.setTimeout(function () {
+          el.style.display = 'none';
+        }, 1800);
+      }
+
+      function loadWidget() {
+        var apiUrl = (apiUrlEl.value || '').trim().replace(/\/$/, '');
+        var apiKey = (apiKeyEl.value || '').trim();
+        if (!apiUrl) { alert('Inserisci URL app'); return; }
+        if (!apiKey) { alert('Inserisci API Key'); return; }
+
+        var existingRoot = document.getElementById('pscompany-chatbot-root');
+        if (existingRoot) existingRoot.remove();
+        var existingScript = document.querySelector('script[data-api-key]');
+        if (existingScript) existingScript.remove();
+
+        var script = document.createElement('script');
+        script.src = apiUrl + '/widget.js';
+        script.setAttribute('data-api-key', apiKey);
+        script.setAttribute('data-api-url', apiUrl);
+        document.body.appendChild(script);
+
+        showOk(loadOk);
+      }
+
+      function legacyCopy(text) {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.position = 'fixed';
+        ta.style.opacity = '0';
+        ta.style.pointerEvents = 'none';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        var ok = false;
+        try {
+          ok = document.execCommand('copy');
+        } catch (e) {
+          ok = false;
+        }
+        document.body.removeChild(ta);
+        return ok;
+      }
+
+      function copyText(text) {
+        if (!text) return;
+
+        if (navigator.clipboard && window.isSecureContext) {
+          return navigator.clipboard.writeText(text)
+            .then(function () {
+              showOk(copyOk);
+            })
+            .catch(function () {
+              if (legacyCopy(text)) {
+                showOk(copyOk);
+                return;
+              }
+              alert('Copia automatica non disponibile. Usa il box "Messaggio scenario" e copia manualmente.');
+            });
+        }
+
+        if (legacyCopy(text)) {
+          showOk(copyOk);
+          return Promise.resolve();
+        }
+
+        alert('Copia automatica non disponibile. Usa il box "Messaggio scenario" e copia manualmente.');
+        return Promise.resolve();
+      }
+
+      document.getElementById('loadBtn').addEventListener('click', loadWidget);
+      document.getElementById('reloadBtn').addEventListener('click', loadWidget);
+      document.getElementById('copyFromAreaBtn').addEventListener('click', function () {
+        copyText(scenarioTextEl.value || '');
+      });
+
+      var scenarioButtons = document.querySelectorAll('.scenario-btn');
+      scenarioButtons.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var text = btn.getAttribute('data-msg') || '';
+          scenarioTextEl.value = text;
+          copyText(text);
+        });
+      });
+    })();
+  </script>
+</body>
+</html>

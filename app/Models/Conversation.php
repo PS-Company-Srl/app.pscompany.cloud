@@ -94,6 +94,19 @@ class Conversation extends Model
         if (strlen($text) > 200) {
             $text = substr($text, 0, 200);
         }
+        $updated = false;
+
+        // "nome e cognome: Mario Rossi"
+        if (preg_match('/\bnome\s+e\s+cognome\s*[:\-]?\s*([A-Za-zÀ-ÿ\'\-]+)\s+([A-Za-zÀ-ÿ\'\-]+)/ui', $text, $m)) {
+            if (empty($this->first_name)) {
+                $this->first_name = trim($m[1]);
+                $updated = true;
+            }
+            if (empty($this->last_name)) {
+                $this->last_name = trim($m[2]);
+                $updated = true;
+            }
+        }
 
         // "mi chiamo Nome Cognome" / "sono Nome Cognome" / "il mio nome è Nome Cognome"
         if (preg_match('/\b(?:mi chiamo|sono|il mio nome è)\s+([A-Za-zÀ-ÿ\'\-]+)(?:\s+([A-Za-zÀ-ÿ\'\-]+))?/ui', $text, $m)) {
@@ -102,35 +115,54 @@ class Conversation extends Model
             if ($first !== '') {
                 if (empty($this->first_name)) {
                     $this->first_name = $first;
+                    $updated = true;
                 }
                 if ($second !== '' && empty($this->last_name)) {
                     $this->last_name = $second;
+                    $updated = true;
                 }
-                return true;
             }
         }
 
-        // "nome: Mario" e "cognome: Rossi" (o "nome e cognome: Mario Rossi")
-        if (preg_match('/\bnome\s*[:\s]+\s*([A-Za-zÀ-ÿ\'\-]+)/ui', $text, $m) && empty($this->first_name)) {
+        // "nome: Mario"
+        if (preg_match('/\bnome\s*[:\-]\s*([A-Za-zÀ-ÿ\'\-]+)/ui', $text, $m) && empty($this->first_name)) {
             $this->first_name = trim($m[1]);
-            return true;
+            $updated = true;
         }
-        if (preg_match('/\bcognome\s*[:\s]+\s*([A-Za-zÀ-ÿ\'\-]+)/ui', $text, $m) && empty($this->last_name)) {
+
+        // "cognome: Rossi"
+        if (preg_match('/\bcognome\s*[:\-]\s*([A-Za-zÀ-ÿ\'\-]+)/ui', $text, $m) && empty($this->last_name)) {
             $this->last_name = trim($m[1]);
-            return true;
+            $updated = true;
+        }
+
+        // "nome Mario" (senza separatore)
+        if (preg_match('/\bnome\s+([A-Za-zÀ-ÿ\'\-]+)/ui', $text, $m) && empty($this->first_name)) {
+            $candidate = mb_strtolower(trim($m[1]));
+            if ($candidate !== 'e' && $candidate !== 'cognome') {
+                $this->first_name = trim($m[1]);
+                $updated = true;
+            }
+        }
+
+        // "cognome Rossi" (senza separatore)
+        if (preg_match('/\bcognome\s+([A-Za-zÀ-ÿ\'\-]+)/ui', $text, $m) && empty($this->last_name)) {
+            $this->last_name = trim($m[1]);
+            $updated = true;
         }
 
         // Messaggio di sole due parole (es. "Mario Rossi") interpretate come nome e cognome
         if (preg_match('/^([A-Za-zÀ-ÿ\'\-]+)\s+([A-Za-zÀ-ÿ\'\-]+)\s*$/u', $text, $m)) {
             if (empty($this->first_name)) {
                 $this->first_name = trim($m[1]);
+                $updated = true;
             }
             if (empty($this->last_name)) {
                 $this->last_name = trim($m[2]);
+                $updated = true;
             }
-            return true;
         }
 
-        return false;
+        return $updated;
     }
 }
