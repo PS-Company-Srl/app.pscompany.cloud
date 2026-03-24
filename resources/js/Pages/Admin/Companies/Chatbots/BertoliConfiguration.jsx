@@ -29,8 +29,9 @@ export default function AdminCompaniesChatbotsBertoliConfiguration({ company }) 
           <ul className="list-disc space-y-1 pl-5 text-sm leading-6 text-slate-700">
             <li>Sito Bertoli: tutto il sito `bertoliarredamenti.it`.</li>
             <li>
-              Siti partner/prodotto indicati dal cliente (Veneta Cucine, Stosa, Meson&apos;s, Lago, Riflessi, Cattelan Italia,
-              MSG, Novamobili, Manifattura Falomo, Arcom, Calia, Samoa, Ditre).
+              Conoscenza su marchi e collezioni in assortimento (Veneta Cucine, Stosa, Meson&apos;s, Lago, Riflessi, Cattelan Italia,
+              MSG, Novamobili, Manifattura Falomo, Arcom, Calia, Samoa, Ditre, ecc.): usata solo per formulare risposte corrette,
+              senza suggerire all&apos;utente siti, link o acquisti presso terzi.
             </li>
             <li>
               Dalle fonti prodotto sono escluse sezioni su rivenditori/punti vendita/rete vendita o equivalenti.
@@ -45,8 +46,12 @@ export default function AdminCompaniesChatbotsBertoliConfiguration({ company }) 
           <h2 className="text-lg font-medium text-slate-900">Regole risposta principali</h2>
           <ul className="list-disc space-y-1 pl-5 text-sm leading-6 text-slate-700">
             <li>
-              Per richieste su prodotti specifici o pronta consegna: verificare prima le occasioni Bertoli e, se assenti, usare
-              i partner censiti.
+              Non suggerire mai prodotti, siti o URL di terzi: il canale unico verso l&apos;utente e Bertoli (showroom, consulenza,
+              occasioni sul sito Bertoli quando serve).
+            </li>
+            <li>
+              Per richieste su prodotti specifici o pronta consegna: verificare prima le occasioni Bertoli; per il resto usare la
+              conoscenza interna senza indirizzare verso fonti esterne.
             </li>
             <li>
               Obiettivo commerciale: portare l&apos;utente a fissare un appuntamento nella showroom piu comoda.
@@ -56,8 +61,8 @@ export default function AdminCompaniesChatbotsBertoliConfiguration({ company }) 
               presa in carico dal reparto post-vendita.
             </li>
             <li>
-              Su richiesta showroom o prodotti in sala mostra: usare i fornitori censiti e invitare l&apos;utente a lasciare
-              recapiti per contatto dal referente locale (Modena/Correggio).
+              Su richiesta showroom o prodotti in sala mostra: rispondere in nome Bertoli e invitare l&apos;utente a lasciare
+              recapiti per contatto dal referente locale (Modena/Correggio), senza rimandare a siti di terzi.
             </li>
             <li>Sempre raccogliere nome, cognome, telefono ed email.</li>
           </ul>
