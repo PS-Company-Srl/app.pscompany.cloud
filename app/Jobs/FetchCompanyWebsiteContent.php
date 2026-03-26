@@ -390,24 +390,27 @@ class FetchCompanyWebsiteContent implements ShouldQueue
 
     private function extractOccasionItemsFromText(string $text, string $sourceUrl): array
     {
+        $text = html_entity_decode($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
         $text = preg_replace('/\s+/u', ' ', $text) ?? $text;
         if (trim($text) === '') {
             return [];
         }
 
-        preg_match_all(
-            '/Bertoli Arredamenti\s+(Modena|Correggio)\s+(.*?)(?=Bertoli Arredamenti\s+(?:Modena|Correggio)|Normalmente questi prodotti|Perch[eé] proprio Bertoli Arredamenti|$)/iu',
-            $text,
-            $blocks,
-            PREG_SET_ORDER
-        );
+        // Parser robusto: evita lookahead complessi che in alcuni ambienti
+        // non matchano correttamente su testi lunghi/rumorosi.
+        $marked = preg_replace('/Bertoli Arredamenti\s+Modena/iu', ' ||STORE:Modena|| ', $text) ?? $text;
+        $marked = preg_replace('/Bertoli Arredamenti\s+Correggio/iu', ' ||STORE:Correggio|| ', $marked) ?? $marked;
+        $parts = preg_split('/\|\|STORE:(Modena|Correggio)\|\|/u', $marked, -1, PREG_SPLIT_DELIM_CAPTURE);
+        if (! is_array($parts) || count($parts) < 3) {
+            return [];
+        }
 
         $items = [];
         $seen = [];
         $order = 0;
-        foreach ($blocks as $block) {
-            $showroom = trim((string) ($block[1] ?? ''));
-            $body = trim((string) ($block[2] ?? ''));
+        for ($i = 1; $i < count($parts); $i += 2) {
+            $showroom = trim((string) ($parts[$i] ?? ''));
+            $body = trim((string) ($parts[$i + 1] ?? ''));
             if ($body === '') {
                 continue;
             }
