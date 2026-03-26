@@ -17,7 +17,7 @@ class ChatbotService
     public function reply(Chatbot $chatbot, string $userMessage, array $history = []): string
     {
         $company = $chatbot->company;
-        $context = $this->buildRelevantContext($company, $userMessage, self::MAX_CONTEXT_CHARS);
+        $context = $this->buildRelevantContext($chatbot, $company, $userMessage, self::MAX_CONTEXT_CHARS);
         $systemPrompt = $this->buildSystemPrompt($chatbot, $company, $context);
 
         $messages = [
@@ -99,7 +99,7 @@ class ChatbotService
      * Costruisce un contesto mirato alla domanda utente per evitare di perdere
      * dati utili in caso di knowledge molto estesa (es. molte occasioni).
      */
-    private function buildRelevantContext(Company $company, string $userMessage, int $maxChars): string
+    private function buildRelevantContext(Chatbot $chatbot, Company $company, string $userMessage, int $maxChars): string
     {
         $siteText = trim((string) ($company->website_extracted_text ?? ''));
         $docTexts = $company->documents()
@@ -111,8 +111,15 @@ class ChatbotService
 
         $sections = [];
 
+        if ($chatbot->bertoli_configuration_enabled) {
+            $occasionSection = $this->buildOccasionItemsSection($company, $userMessage);
+            if ($occasionSection !== '') {
+                $sections[] = $occasionSection;
+            }
+        }
+
         if ($siteText !== '') {
-            $siteBudget = (int) ($maxChars * 0.8);
+            $siteBudget = (int) ($maxChars * 0.7);
             $sections[] = "[Contenuto dal sito web dell'azienda]\n\n" . $this->extractTopRelevantChunks($siteText, $userMessage, $siteBudget);
         }
 
@@ -125,6 +132,66 @@ class ChatbotService
         }
 
         return trim(implode("\n\n", $sections));
+    }
+
+    private function buildOccasionItemsSection(Company $company, string $userMessage): string
+    {
+        $queryKeywords = $this->extractKeywords($userMessage);
+        $items = $company->occasionItems()
+            ->limit(400)
+            ->get(['showroom', 'title', 'price_from', 'price_to']);
+
+        if ($items->isEmpty()) {
+            return '';
+        }
+
+        $scored = [];
+        foreach ($items as $item) {
+            $haystack = mb_strtolower(trim(($item->title ?? '') . ' ' . ($item->showroom ?? '')));
+            $score = 0;
+            foreach ($queryKeywords as $keyword) {
+                $score += mb_substr_count($haystack, $keyword) * 5;
+            }
+            if (str_contains($haystack, 'divano')) {
+                $score += 3;
+            }
+            $scored[] = ['item' => $item, 'score' => $score];
+        }
+
+        usort($scored, fn (array $a, array $b) => $b['score'] <=> $a['score']);
+        $top = array_slice($scored, 0, 40);
+        if (empty($top)) {
+            return '';
+        }
+
+        $lines = [];
+        foreach ($top as $row) {
+            $item = $row['item'];
+            $showroom = trim((string) ($item->showroom ?? ''));
+            $title = trim((string) ($item->title ?? ''));
+            $priceFrom = trim((string) ($item->price_from ?? ''));
+            $priceTo = trim((string) ($item->price_to ?? ''));
+            if ($title === '') {
+                continue;
+            }
+            $line = "- {$title}";
+            if ($showroom !== '') {
+                $line .= " | showroom: {$showroom}";
+            }
+            if ($priceFrom !== '' || $priceTo !== '') {
+                $line .= " | prezzo: {$priceFrom}";
+                if ($priceTo !== '') {
+                    $line .= " -> {$priceTo}";
+                }
+            }
+            $lines[] = $line;
+        }
+
+        if (empty($lines)) {
+            return '';
+        }
+
+        return "[Occasioni Bertoli strutturate - prioritarie su pronta consegna]\n" . implode("\n", $lines);
     }
 
     private function extractTopRelevantChunks(string $text, string $query, int $maxChars): string

@@ -70,4 +70,9 @@ class Company extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    public function occasionItems(): HasMany
+    {
+        return $this->hasMany(CompanyOccasionItem::class)->orderBy('sort_order');
+    }
 }

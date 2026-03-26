@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Company;
+use App\Models\CompanyOccasionItem;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -104,6 +105,10 @@ class FetchCompanyWebsiteContent implements ShouldQueue
         }
 
         $this->company->update(['website_extracted_text' => $combined ?: null]);
+
+        if ($this->hasBertoliConfigurationEnabled()) {
+            $this->syncBertoliOccasionItems($baseUrl, $baseHost);
+        }
     }
 
     /**
@@ -332,5 +337,117 @@ class FetchCompanyWebsiteContent implements ShouldQueue
         }
 
         return $score;
+    }
+
+    private function syncBertoliOccasionItems(string $baseUrl, string $baseHost): void
+    {
+        $scheme = parse_url($baseUrl, PHP_URL_SCHEME) ?: 'https';
+        $occasionUrl = $scheme . '://' . $baseHost . '/occasioni/';
+
+        try {
+            $response = Http::withHeaders(['User-Agent' => self::USER_AGENT])
+                ->timeout(20)
+                ->get($occasionUrl);
+
+            if (! $response->successful()) {
+                Log::warning('Bertoli occasioni fetch failed', [
+                    'company_id' => $this->company->id,
+                    'url' => $occasionUrl,
+                    'status' => $response->status(),
+                ]);
+                return;
+            }
+
+            $text = $this->extractTextFromHtml($response->body());
+            $items = $this->extractOccasionItemsFromText($text, $occasionUrl);
+
+            if (count($items) === 0) {
+                Log::warning('Bertoli occasioni parse returned zero items', [
+                    'company_id' => $this->company->id,
+                    'url' => $occasionUrl,
+                ]);
+                return;
+            }
+
+            CompanyOccasionItem::where('company_id', $this->company->id)->delete();
+            CompanyOccasionItem::insert($items);
+        } catch (\Throwable $e) {
+            Log::warning('Bertoli occasioni sync failed', [
+                'company_id' => $this->company->id,
+                'url' => $occasionUrl,
+                'error' => $e->getMessage(),
+            ]);
+        }
+    }
+
+    private function extractOccasionItemsFromText(string $text, string $sourceUrl): array
+    {
+        $text = preg_replace('/\s+/u', ' ', $text) ?? $text;
+        if (trim($text) === '') {
+            return [];
+        }
+
+        preg_match_all(
+            '/Bertoli Arredamenti\s+(Modena|Correggio)\s+(.*?)(?=Bertoli Arredamenti\s+(?:Modena|Correggio)|Normalmente questi prodotti|Perch[eé] proprio Bertoli Arredamenti|$)/iu',
+            $text,
+            $blocks,
+            PREG_SET_ORDER
+        );
+
+        $items = [];
+        $seen = [];
+        $order = 0;
+        foreach ($blocks as $block) {
+            $showroom = trim((string) ($block[1] ?? ''));
+            $body = trim((string) ($block[2] ?? ''));
+            if ($body === '') {
+                continue;
+            }
+
+            preg_match_all('/(?:€\s*)?\d{1,3}(?:[.\s]\d{3})*(?:,\d{2})?(?:\s*cad\.)?/iu', $body, $priceMatches);
+            $prices = $priceMatches[0] ?? [];
+            if (count($prices) < 2) {
+                continue;
+            }
+
+            $firstPricePos = mb_stripos($body, (string) $prices[0]);
+            if ($firstPricePos === false) {
+                continue;
+            }
+
+            $title = trim(mb_substr($body, 0, $firstPricePos));
+            $title = preg_replace('/^[#\-\s]+/u', '', $title) ?? $title;
+            $title = trim((string) (preg_replace('/\s+/u', ' ', $title) ?? $title));
+
+            if (mb_strlen($title) < 4) {
+                continue;
+            }
+            if (preg_match('/^(home|cerca|brand|negozio|ambiente|orari)$/iu', $title)) {
+                continue;
+            }
+
+            $priceFrom = trim((string) $prices[0]);
+            $priceTo = trim((string) $prices[1]);
+            $key = mb_strtolower($showroom . '|' . $title . '|' . $priceFrom . '|' . $priceTo);
+            if (isset($seen[$key])) {
+                continue;
+            }
+            $seen[$key] = true;
+
+            $items[] = [
+                'company_id' => $this->company->id,
+                'showroom' => $showroom,
+                'title' => mb_substr($title, 0, 255),
+                'price_from' => mb_substr($priceFrom, 0, 100),
+                'price_to' => mb_substr($priceTo, 0, 100),
+                'sort_order' => $order++,
+                'source_url' => $sourceUrl,
+                'raw_block' => mb_substr($body, 0, 5000),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+        }
+
+        return $items;
     }
 }
