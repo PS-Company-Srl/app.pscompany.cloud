@@ -16,10 +16,10 @@ class FetchCompanyWebsiteContent implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 2;
-    public int $timeout = 120;
+    public int $timeout = 300;
 
-    private const MAX_PAGES = 50;
-    private const MAX_CHARS_TOTAL = 100000;
+    private const MAX_PAGES = 200;
+    private const MAX_CHARS_TOTAL = 500000;
     private const USER_AGENT = 'Mozilla/5.0 (compatible; CompanyChatbot/1.0)';
 
     public function __construct(
@@ -42,7 +42,8 @@ class FetchCompanyWebsiteContent implements ShouldQueue
         } elseif (! in_array($baseUrl, $toVisit, true)) {
             array_unshift($toVisit, $baseUrl);
         }
-        $toVisit = array_slice(array_unique($toVisit), 0, self::MAX_PAGES);
+        $toVisit = $this->prioritizeStrategicUrls(array_values(array_unique($toVisit)));
+        $toVisit = array_slice($toVisit, 0, self::MAX_PAGES);
 
         $visited = [];
         $allText = [];
@@ -261,5 +262,42 @@ class FetchCompanyWebsiteContent implements ShouldQueue
         $basePath = $baseParts['path'] ?? '/';
         $basePath = preg_replace('#/[^/]*$#', '/', $basePath);
         return $baseUrl . $basePath . $href;
+    }
+
+    /**
+     * Porta in alto le pagine chiave (es. occasioni) prima del crawl.
+     */
+    private function prioritizeStrategicUrls(array $urls): array
+    {
+        usort($urls, function (string $a, string $b): int {
+            $scoreA = $this->urlPriorityScore($a);
+            $scoreB = $this->urlPriorityScore($b);
+
+            if ($scoreA === $scoreB) {
+                return strcmp($a, $b);
+            }
+
+            return $scoreB <=> $scoreA;
+        });
+
+        return $urls;
+    }
+
+    private function urlPriorityScore(string $url): int
+    {
+        $u = mb_strtolower($url);
+        $score = 0;
+
+        if (str_contains($u, '/occasioni')) {
+            $score += 100;
+        }
+        if (str_contains($u, 'pronta-consegna') || str_contains($u, 'pronta_consegna')) {
+            $score += 80;
+        }
+        if (str_contains($u, '/divani') || str_contains($u, '/tavoli') || str_contains($u, '/cucina')) {
+            $score += 40;
+        }
+
+        return $score;
     }
 }

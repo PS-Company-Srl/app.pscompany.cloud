@@ -11,11 +11,13 @@ class ChatbotService
 {
     private const MODEL = 'gpt-4o-mini';
     private const MAX_CONTEXT_CHARS = 14000;
+    private const CHUNK_SIZE = 1200;
+    private const CHUNK_OVERLAP = 180;
 
     public function reply(Chatbot $chatbot, string $userMessage, array $history = []): string
     {
         $company = $chatbot->company;
-        $context = $company->getKnowledgeContext(self::MAX_CONTEXT_CHARS);
+        $context = $this->buildRelevantContext($company, $userMessage, self::MAX_CONTEXT_CHARS);
         $systemPrompt = $this->buildSystemPrompt($chatbot, $company, $context);
 
         $messages = [
@@ -91,6 +93,151 @@ class ChatbotService
         }
 
         return $base;
+    }
+
+    /**
+     * Costruisce un contesto mirato alla domanda utente per evitare di perdere
+     * dati utili in caso di knowledge molto estesa (es. molte occasioni).
+     */
+    private function buildRelevantContext(Company $company, string $userMessage, int $maxChars): string
+    {
+        $siteText = trim((string) ($company->website_extracted_text ?? ''));
+        $docTexts = $company->documents()
+            ->whereNotNull('extracted_text')
+            ->where('extracted_text', '!=', '')
+            ->pluck('extracted_text')
+            ->implode("\n\n---\n\n");
+        $docsText = trim((string) $docTexts);
+
+        $sections = [];
+
+        if ($siteText !== '') {
+            $siteBudget = (int) ($maxChars * 0.8);
+            $sections[] = "[Contenuto dal sito web dell'azienda]\n\n" . $this->extractTopRelevantChunks($siteText, $userMessage, $siteBudget);
+        }
+
+        if ($docsText !== '') {
+            $used = mb_strlen(implode("\n\n", $sections));
+            $remaining = max(0, $maxChars - $used);
+            if ($remaining > 0) {
+                $sections[] = "[Documenti forniti dall'azienda]\n\n" . mb_substr($docsText, 0, $remaining);
+            }
+        }
+
+        return trim(implode("\n\n", $sections));
+    }
+
+    private function extractTopRelevantChunks(string $text, string $query, int $maxChars): string
+    {
+        if ($text === '' || $maxChars <= 0) {
+            return '';
+        }
+
+        $chunks = $this->splitIntoChunks($text, self::CHUNK_SIZE, self::CHUNK_OVERLAP);
+        if (empty($chunks)) {
+            return mb_substr($text, 0, $maxChars);
+        }
+
+        $keywords = $this->extractKeywords($query);
+        $scored = [];
+        foreach ($chunks as $idx => $chunk) {
+            $scored[] = [
+                'idx' => $idx,
+                'chunk' => $chunk,
+                'score' => $this->chunkScore($chunk, $keywords),
+            ];
+        }
+
+        usort($scored, fn (array $a, array $b) => $b['score'] <=> $a['score']);
+
+        $selected = [];
+        $currentLen = 0;
+        foreach ($scored as $row) {
+            $piece = trim($row['chunk']);
+            if ($piece === '') {
+                continue;
+            }
+            $pieceLen = mb_strlen($piece) + 6;
+            if ($currentLen + $pieceLen > $maxChars) {
+                continue;
+            }
+            $selected[] = $piece;
+            $currentLen += $pieceLen;
+            if ($currentLen >= $maxChars) {
+                break;
+            }
+        }
+
+        if (empty($selected)) {
+            return mb_substr($text, 0, $maxChars);
+        }
+
+        return implode("\n\n---\n\n", $selected);
+    }
+
+    private function splitIntoChunks(string $text, int $size, int $overlap): array
+    {
+        $text = trim(preg_replace('/\s+/', ' ', $text) ?? $text);
+        if ($text === '') {
+            return [];
+        }
+
+        $chunks = [];
+        $len = mb_strlen($text);
+        $step = max(1, $size - $overlap);
+        for ($start = 0; $start < $len; $start += $step) {
+            $chunks[] = mb_substr($text, $start, $size);
+        }
+
+        return $chunks;
+    }
+
+    private function extractKeywords(string $query): array
+    {
+        $clean = mb_strtolower($query);
+        $clean = preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $clean) ?? $clean;
+        $parts = preg_split('/\s+/u', $clean, -1, PREG_SPLIT_NO_EMPTY) ?: [];
+        $stopwords = [
+            'che', 'del', 'della', 'delle', 'degli', 'dei', 'sono', 'alla', 'dallo', 'dalla', 'dalle',
+            'con', 'per', 'una', 'uno', 'gli', 'nel', 'nella', 'nelle', 'sul', 'sulla', 'dove', 'come',
+            'avete', 'avrei', 'vorrei', 'sto', 'cerca', 'cerco', 'avere',
+        ];
+
+        $keywords = [];
+        foreach ($parts as $p) {
+            if (mb_strlen($p) < 3 || in_array($p, $stopwords, true)) {
+                continue;
+            }
+            $keywords[] = $p;
+        }
+
+        return array_values(array_unique($keywords));
+    }
+
+    private function chunkScore(string $chunk, array $keywords): int
+    {
+        $c = mb_strtolower($chunk);
+        $score = 0;
+
+        foreach ($keywords as $k) {
+            $score += mb_substr_count($c, $k) * 4;
+        }
+
+        // Boost per pagine/prodotti utili al caso Bertoli
+        if (str_contains($c, 'occasioni')) {
+            $score += 20;
+        }
+        if (str_contains($c, 'pronta consegna') || str_contains($c, 'pronta-consegna')) {
+            $score += 15;
+        }
+        if (str_contains($c, 'divano')) {
+            $score += 12;
+        }
+        if (str_contains($c, 'showroom')) {
+            $score += 8;
+        }
+
+        return $score;
     }
 
     private function bertoliConfigurationPrompt(): string
