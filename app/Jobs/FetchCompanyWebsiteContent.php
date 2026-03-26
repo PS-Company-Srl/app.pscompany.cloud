@@ -37,6 +37,9 @@ class FetchCompanyWebsiteContent implements ShouldQueue
         $baseHost = parse_url($url, PHP_URL_HOST);
         $baseUrl = $this->normalizeUrl($url);
         $toVisit = $this->discoverUrlsViaSitemap($baseUrl, $baseHost);
+        if ($this->hasBertoliConfigurationEnabled()) {
+            $toVisit = $this->prependMandatoryKnowledgeUrls($toVisit, $baseHost, $baseUrl);
+        }
         if (empty($toVisit)) {
             $toVisit = [$baseUrl];
         } elseif (! in_array($baseUrl, $toVisit, true)) {
@@ -262,6 +265,36 @@ class FetchCompanyWebsiteContent implements ShouldQueue
         $basePath = $baseParts['path'] ?? '/';
         $basePath = preg_replace('#/[^/]*$#', '/', $basePath);
         return $baseUrl . $basePath . $href;
+    }
+
+    /**
+     * URL obbligatorie da includere sempre nella knowledge.
+     */
+    private function prependMandatoryKnowledgeUrls(array $urls, string $baseHost, string $baseUrl): array
+    {
+        $scheme = parse_url($baseUrl, PHP_URL_SCHEME) ?: 'https';
+        $origin = $scheme . '://' . $baseHost;
+
+        $mandatory = [
+            $origin . '/occasioni/',
+        ];
+
+        $normalized = [];
+        foreach ($mandatory as $m) {
+            $normalized[] = $this->normalizeUrl($m);
+        }
+
+        $existing = array_map(fn (string $u): string => $this->normalizeUrl($u), $urls);
+        $merged = array_values(array_unique(array_merge($normalized, $existing)));
+
+        return $merged;
+    }
+
+    private function hasBertoliConfigurationEnabled(): bool
+    {
+        return $this->company->chatbots()
+            ->where('bertoli_configuration_enabled', true)
+            ->exists();
     }
 
     /**
