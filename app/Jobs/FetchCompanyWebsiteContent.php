@@ -107,7 +107,7 @@ class FetchCompanyWebsiteContent implements ShouldQueue
         $this->company->update(['website_extracted_text' => $combined ?: null]);
 
         if ($this->hasBertoliConfigurationEnabled()) {
-            $this->syncBertoliOccasionItems($baseUrl, $baseHost);
+            $this->syncBertoliOccasionItems($baseUrl, $baseHost, $combined);
         }
     }
 
@@ -339,7 +339,7 @@ class FetchCompanyWebsiteContent implements ShouldQueue
         return $score;
     }
 
-    private function syncBertoliOccasionItems(string $baseUrl, string $baseHost): void
+    private function syncBertoliOccasionItems(string $baseUrl, string $baseHost, string $fallbackText = ''): void
     {
         $scheme = parse_url($baseUrl, PHP_URL_SCHEME) ?: 'https';
         $occasionUrl = $scheme . '://' . $baseHost . '/occasioni/';
@@ -361,10 +361,18 @@ class FetchCompanyWebsiteContent implements ShouldQueue
             $text = $this->extractTextFromHtml($response->body());
             $items = $this->extractOccasionItemsFromText($text, $occasionUrl);
 
+            if (count($items) === 0 && trim($fallbackText) !== '') {
+                // fallback: usa il corpus completo appena salvato se il parsing diretto
+                // della pagina /occasioni/ non trova blocchi validi in questo ambiente.
+                $items = $this->extractOccasionItemsFromText($fallbackText, $occasionUrl);
+            }
+
             if (count($items) === 0) {
                 Log::warning('Bertoli occasioni parse returned zero items', [
                     'company_id' => $this->company->id,
                     'url' => $occasionUrl,
+                    'fetched_text_has_bertoli' => mb_stripos($text, 'Bertoli Arredamenti') !== false,
+                    'fallback_text_has_bertoli' => mb_stripos($fallbackText, 'Bertoli Arredamenti') !== false,
                 ]);
                 return;
             }
